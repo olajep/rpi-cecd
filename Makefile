@@ -2,7 +2,6 @@ OBJS = cec.o
 BIN = rpi-cecd
 
 CC ?= gcc
-AR ?= ar
 
 CFLAGS ?= -I$(SDKSTAGE)/opt/vc/include/ -I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads
 OPTS = -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS            \
@@ -21,9 +20,6 @@ all: $(BIN)
 
 $(BIN) : $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(LIBS) $(OBJS) -rdynamic
-
-%.a: $(OBJS)
-	$(AR) r $@ $^
 
 clean:
 	for i in $(OBJS); do (if test -e "$$i"; then ( rm $$i ); fi ); done
