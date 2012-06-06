@@ -7,7 +7,7 @@ CFLAGS += \
 	-D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -Wall -g -ftree-vectorize -pipe  \
 	-DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi
 
-LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ -lbcm_host -lvchiq_arm
+LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ -lbcm_host -lvchiq_arm -lcurl
 
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/
 

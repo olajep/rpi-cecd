@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <unistd.h>
 
+#include <curl/curl.h>
+
 
 #include <interface/vmcs_host/vc_cecservice.h>
 
@@ -22,27 +24,43 @@ extern int32_t vchi_connect( VCHI_CONNECTION_T **connections,
 
 
 volatile int might_be_dimmed=0;
+CURL *curl;
 
-// TODO: Use exec instead of system
-void xbmc_sendkey(uint32_t keysym)
+size_t curl_write_nop(void *buffer, size_t size, size_t nmemb, void *userp)
 {
-    char cmd[256];
-    snprintf(cmd, 255,
-            "curl -s -m1 " \
-            "'http://localhost:80/xbmcCmds/xbmcHttp?command=SendKey(%d)' " \
-            "1>/dev/null 2>/dev/null", keysym);
-    system(cmd);
+    return size*nmemb;
 }
 
-// TODO: Use exec instead of system
+void xbmc_sendkey(uint32_t keysym)
+{
+    CURLcode err;
+    char url[256];
+
+    snprintf(url, 255,
+            "http://localhost:80/xbmcCmds/xbmcHttp?command=SendKey(%d)",
+            keysym);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    err = curl_easy_perform(curl);
+    if ( err ) {
+        printf("curl error=%d \"%s\"\n", err, curl_easy_strerror(err));
+    }
+}
+
 void xbmc_sendaction(uint32_t action)
 {
-    char cmd[256];
-    snprintf(cmd, 255,
-            "curl -s -m1 " \
-            "'http://localhost:80/xbmcCmds/xbmcHttp?command=Action(%d)' " \
-            "1>/dev/null 2>/dev/null", action);
-    system(cmd);
+    CURLcode err;
+    char url[256];
+
+    snprintf(url, 255,
+            "http://localhost:80/xbmcCmds/xbmcHttp?command=Action(%d)",
+            action);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    err = curl_easy_perform(curl);
+    if ( err ) {
+        printf("curl error=%d \"%s\"\n", err, curl_easy_strerror(err));
+    }
 }
 
 void button_pressed(uint32_t param)
@@ -169,6 +187,16 @@ int main ()
     uint16_t physical_address;
 
 
+    curl = curl_easy_init();
+    if ( curl == NULL ) {
+        printf("failed to init curl.\n");
+        return -1;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_nop);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000);
+
+
     res = vchi_initialise(&vchiq_instance);
     if ( res != VCHIQ_SUCCESS ) {
         printf("failed to open vchiq instance\n");
@@ -211,6 +239,8 @@ int main ()
     }
 
     vchi_exit();
+
+    curl_easy_cleanup(curl);
 
     return 0;
 }
