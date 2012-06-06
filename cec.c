@@ -83,10 +83,10 @@ void button_pressed(uint32_t param)
     operand2  = CEC_CB_OPERAND2(param);
 
     if (opcode != CEC_Opcode_UserControlPressed) {
-        printf("button_pressed: unknown operand operand1=0x%x\n", operand1);
-        printf("\tinitiator=0x%x, follower=0x%x, opcode=0x%x, " \
+        printf("button_pressed: unknown operand operand1=0x%x: "
+                "initiator=0x%x, follower=0x%x, opcode=0x%x, "
                 "operand1=0x%x, operand2=0x%x\n",
-                initiator, follower, opcode, operand1, operand2);
+                operand1, initiator, follower, opcode, operand1, operand2);
         return;
     }
 
@@ -185,7 +185,8 @@ void cec_callback(void *callback_data, uint32_t param0,
         }
         button_pressed(param1);
     } else if ( reason != VC_CEC_BUTTON_RELEASE ) {
-        printf("Unknown event: reason=0x%04x, len=0x%02x, retval=0x%02x, " \
+        printf("cec_callback: unknown event: "
+                "reason=0x%04x, len=0x%02x, retval=0x%02x, "
                 "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
                 reason, len, retval, param1, param2, param3, param4);
     }
