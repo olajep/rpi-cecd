@@ -210,6 +210,7 @@ int main ()
         sleep(10);
     }
 
+    vchi_exit();
 
     return 0;
 }
