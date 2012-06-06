@@ -168,26 +168,18 @@ int main ()
     CEC_AllDevices_T logical_address;
     uint16_t physical_address;
 
-#if 0
-    bcm_host_init();
-    vcos_init();
-#endif
 
     res = vchi_initialise(&vchiq_instance);
     if ( res != VCHIQ_SUCCESS ) {
         printf("* failed to open vchiq instance\n");
         return -1;
     }
-    //create a vchi connection
+
     res = vchi_connect( NULL, 0, vchiq_instance );
     if ( res != 0 ) {
         printf( "VCHI connection failed\n" );
         return -1;
     }
-
-#if 0
-    vc_vchi_dispmanx_init( vchiq_instance, &vchi_connection, 1 );
-#endif
 
     vc_vchi_cec_init(vchiq_instance, &vchi_connection, 1);
     if ( res != 0 ) {
@@ -218,9 +210,6 @@ int main ()
         sleep(10);
     }
 
-#if 0
-    bcm_host_deinit();
-#endif
 
     return 0;
 }
