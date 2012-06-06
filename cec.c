@@ -27,43 +27,49 @@ extern int32_t vchi_connect( VCHI_CONNECTION_T **connections,
 #endif
 
 volatile int might_be_dimmed=0;
-CURL *curl;
 
 size_t curl_write_nop(void *buffer, size_t size, size_t nmemb, void *userp)
 {
     return size*nmemb;
 }
 
+void curl_get(char *url)
+{
+    CURL *curl;
+    CURLcode err;
+
+    curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_nop);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000);
+    err = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if ( err ) {
+        printf("curl_get: error=%d \"%s\"\n", err, curl_easy_strerror(err));
+    }
+}
+
 void xbmc_sendkey(uint32_t keysym)
 {
-    CURLcode err;
     char url[256];
 
     snprintf(url, 255,
             "http://localhost:80/xbmcCmds/xbmcHttp?command=SendKey(%d)",
             keysym);
-
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    err = curl_easy_perform(curl);
-    if ( err ) {
-        printf("curl error=%d \"%s\"\n", err, curl_easy_strerror(err));
-    }
+    curl_get(url);
 }
+
 
 void xbmc_sendaction(uint32_t action)
 {
-    CURLcode err;
     char url[256];
 
     snprintf(url, 255,
             "http://localhost:80/xbmcCmds/xbmcHttp?command=Action(%d)",
             action);
+    curl_get(url);
 
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    err = curl_easy_perform(curl);
-    if ( err ) {
-        printf("curl error=%d \"%s\"\n", err, curl_easy_strerror(err));
-    }
 }
 
 void button_pressed(uint32_t param)
@@ -183,21 +189,20 @@ void cec_callback(void *callback_data, uint32_t param0,
 int main ()
 {
     int res = 0;
+    CURLcode curlerr;
 
     VCHI_INSTANCE_T vchiq_instance;
     VCHI_CONNECTION_T *vchi_connection;
     CEC_AllDevices_T logical_address;
     uint16_t physical_address;
 
-
-    curl = curl_easy_init();
-    if ( curl == NULL ) {
-        printf("failed to init curl.\n");
+    curlerr = curl_global_init(CURL_GLOBAL_NOTHING);
+    if ( curlerr ) {
+        printf("failed to init curl error=%d \"%s\"\n", curlerr,
+                curl_easy_strerror(curlerr));
         return -1;
     }
 
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_nop);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000);
 
 
     res = vchi_initialise(&vchiq_instance);
@@ -243,7 +248,7 @@ int main ()
 
     vchi_exit();
 
-    curl_easy_cleanup(curl);
+    curl_global_cleanup();
 
     return 0;
 }
