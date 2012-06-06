@@ -5,11 +5,13 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "bcm_host.h"
-#include "interface/vchiq_arm/vchiq_if.h"
+
+#include <interface/vmcs_host/vc_cecservice.h>
 
 #include "Key.h"
 
+
+#define VCHIQ_SUCCESS 0
 extern int32_t vchi_initialise( VCHI_INSTANCE_T *instance_handle );
 
 extern int32_t vchi_exit( void );
