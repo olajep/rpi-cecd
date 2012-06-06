@@ -9,11 +9,14 @@
 
 
 #include <interface/vmcs_host/vc_cecservice.h>
+#include <interface/vchiq_arm/vchiq_if.h>
 
 #include "Key.h"
 
-
-#define VCHIQ_SUCCESS 0
+/* Remove this block when everyone is using the latest headers from 
+ * RPi firmware github page
+ */
+#if 1
 extern int32_t vchi_initialise( VCHI_INSTANCE_T *instance_handle );
 
 extern int32_t vchi_exit( void );
@@ -21,7 +24,7 @@ extern int32_t vchi_exit( void );
 extern int32_t vchi_connect( VCHI_CONNECTION_T **connections,
         const uint32_t num_connections,
         VCHI_INSTANCE_T instance_handle );
-
+#endif
 
 volatile int might_be_dimmed=0;
 CURL *curl;
