@@ -203,7 +203,7 @@ int main ()
     printf("logical_address: 0x%x\n", logical_address);
 
     vc_cec_set_vendor_id(CEC_VENDOR_ID_BROADCOM);
-    vc_cec_set_osd_name("1337 Hxrs");
+    vc_cec_set_osd_name("XBMC");
 
     vc_cec_get_physical_address(&physical_address);
     printf("physical_address: 0x%x\n", physical_address);
