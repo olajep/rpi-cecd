@@ -137,7 +137,7 @@ void button_pressed(uint32_t param)
     }
 }
 
-void callback(void *callback_data, uint32_t param0,
+void cec_callback(void *callback_data, uint32_t param0,
         uint32_t param1, uint32_t param2,
         uint32_t param3, uint32_t param4)
 {
@@ -195,7 +195,7 @@ int main ()
         return -1;
     }
 
-    vc_cec_register_callback(((CECSERVICE_CALLBACK_T) callback), NULL);
+    vc_cec_register_callback(((CECSERVICE_CALLBACK_T) cec_callback), NULL);
 
 #if 0
     vc_cec_register_all();
