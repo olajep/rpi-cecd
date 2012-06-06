@@ -171,7 +171,7 @@ int main ()
 
     res = vchi_initialise(&vchiq_instance);
     if ( res != VCHIQ_SUCCESS ) {
-        printf("* failed to open vchiq instance\n");
+        printf("failed to open vchiq instance\n");
         return -1;
     }
 
