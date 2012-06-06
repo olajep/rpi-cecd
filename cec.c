@@ -176,8 +176,13 @@ void cec_callback(void *callback_data, uint32_t param0,
     len     = CEC_CB_MSG_LENGTH(param0);
     retval  = CEC_CB_RC(param0);
 
-    /* TODO: Check len! */
     if ( reason == VC_CEC_BUTTON_PRESSED ) {
+        if ( len > 4 ) {
+            printf("cec_callback: warning: len > 4, only using first parameter "
+                    "reason=0x%04x, len=0x%02x, retval=0x%02x, "
+                    "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
+                    reason, len, retval, param1, param2, param3, param4);
+        }
         button_pressed(param1);
     } else if ( reason != VC_CEC_BUTTON_RELEASE ) {
         printf("Unknown event: reason=0x%04x, len=0x%02x, retval=0x%02x, " \
