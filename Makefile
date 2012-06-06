@@ -1,27 +1,32 @@
-OBJS=cec.o
-BIN=rpi-cecd
+OBJS = cec.o
+BIN = rpi-cecd
 
-CFLAGS += \
-	-DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS 			  \
-	-DTARGET_POSIX -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE 	  \
-	-D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -Wall -g -ftree-vectorize -pipe  \
-	-DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi
+CC ?= gcc
+AR ?= ar
 
-LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ -lbcm_host -lvchiq_arm -lcurl
+CFLAGS ?= -I$(SDKSTAGE)/opt/vc/include/
+OPTS = -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS            \
+	   -DTARGET_POSIX -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
+	   -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -Wall -g -ftree-vectorize     \
+	   -pipe -DUSE_VCHIQ_ARM -Wno-psabi
 
-INCLUDES += -I$(SDKSTAGE)/opt/vc/include/
+LDFLAGS ?= -L$(SDKSTAGE)/opt/vc/lib/
+LIBS = -lbcm_host -lvcos -lvchiq_arm -lcurl
 
-all: $(BIN) $(LIB)
+all: $(BIN)
 
 %.o: %.c
 	@rm -f $@ 
-	$(CC) $(CFLAGS) $(INCLUDES) -g -c $< -o $@ -Wno-deprecated-declarations -Wall
+	$(CC) $(CFLAGS) $(OPTS) -g -c $< -o $@ -Wall
 
 $(BIN) : $(OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS)
+	$(CC) -o $@ $(LDFLAGS) $(LIBS) $(OBJS) -rdynamic
+
+%.a: $(OBJS)
+	$(AR) r $@ $^
 
 clean:
 	for i in $(OBJS); do (if test -e "$$i"; then ( rm $$i ); fi ); done
-	@rm -f $(BIN) $(LIB)
+	@rm -f $(BIN)
 
 

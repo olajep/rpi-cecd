@@ -1,2 +1,0 @@
-export SDKSTAGE=/path/to/rpi/firmware/hardfp
-export CC=/path/to/OpenELEC.tv/build.OpenELEC-RPi.arm-devel/toolchain/bin/armv6zk-openelec-linux-gnueabi-gcc
