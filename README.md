@@ -1,6 +1,9 @@
 #RPI-CECD
 
-This is a temporary hack to make HDMI-CEC work with OpenElec on Raspberry Pi
+This is a temporary hack to make HDMI-CEC work with OpenElec on Raspberry Pi.
+
+If you just want the binary, it's in the 'binary' branch:
+https://github.com/olajep/rpi-cecd/tree/binary
 
 ##Building:
 * Get https://github.com/raspberrypi/firmware
