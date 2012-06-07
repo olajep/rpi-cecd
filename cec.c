@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +14,10 @@
 
 #include <interface/vmcs_host/vc_cecservice.h>
 #include <interface/vchiq_arm/vchiq_if.h>
+
+#ifdef __cplusplus
+}
+#endif
 
 #include "config.h"
 #include "Key.h"
@@ -169,11 +177,10 @@ void cec_callback(void *callback_data, uint32_t param0,
         uint32_t param1, uint32_t param2,
         uint32_t param3, uint32_t param4)
 {
-    VC_CEC_NOTIFY_T reason = 0;
-    uint32_t len = 0;
-    uint32_t retval = 0;
+    VC_CEC_NOTIFY_T reason;
+    uint32_t len, retval;
 
-    reason  = CEC_CB_REASON(param0);
+    reason  = (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);
     len     = CEC_CB_MSG_LENGTH(param0);
     retval  = CEC_CB_RC(param0);
 
