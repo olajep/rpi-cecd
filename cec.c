@@ -11,6 +11,7 @@
 #include <interface/vmcs_host/vc_cecservice.h>
 #include <interface/vchiq_arm/vchiq_if.h>
 
+#include "config.h"
 #include "Key.h"
 
 /* Remove this block when everyone is using the latest headers from 
@@ -175,6 +176,13 @@ void cec_callback(void *callback_data, uint32_t param0,
     reason  = CEC_CB_REASON(param0);
     len     = CEC_CB_MSG_LENGTH(param0);
     retval  = CEC_CB_RC(param0);
+
+#ifdef DEBUG
+    printf("cec_callback: debug: "
+            "reason=0x%04x, len=0x%02x, retval=0x%02x, "
+            "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
+            reason, len, retval, param1, param2, param3, param4);
+#endif
 
     if ( reason == VC_CEC_BUTTON_PRESSED ) {
         if ( len > 4 ) {
