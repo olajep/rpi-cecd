@@ -220,6 +220,11 @@ int main(int argc, char **argv)
     CEC_AllDevices_T logical_address;
     uint16_t physical_address;
 
+    /* Make sure logs are written to disk */
+    setlinebuf(stdout);
+    setlinebuf(stderr);
+
+
     if (argc > 2) {
         printf("usage: %s [port]\n", argv[0]);
         return -1;
