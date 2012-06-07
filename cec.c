@@ -125,7 +125,7 @@ void button_pressed(uint32_t param)
             xbmc_sendaction(ACTION_PREVIOUS_MENU);
             break;
         case CEC_User_Control_SetupMenu:
-            xbmc_sendaction(ACTION_SHOW_OSD);
+            xbmc_sendaction(ACTION_CONTEXT_MENU);
             break;
         case CEC_User_Control_Exit:
             xbmc_sendaction(ACTION_NAV_BACK);
