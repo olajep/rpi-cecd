@@ -125,6 +125,7 @@ void button_pressed(uint32_t param)
             xbmc_sendaction(ACTION_PREVIOUS_MENU);
             break;
         case CEC_User_Control_SetupMenu:
+        case CEC_User_Control_DisplayInformation:
             xbmc_sendaction(ACTION_CONTEXT_MENU);
             break;
         case CEC_User_Control_Exit:
@@ -136,6 +137,7 @@ void button_pressed(uint32_t param)
             break; 
 
         case CEC_User_Control_Play:
+        case CEC_User_Control_Pause:
             xbmc_sendaction(ACTION_PLAYER_PLAYPAUSE );
             break;
         case CEC_User_Control_Stop:
