@@ -11,6 +11,7 @@ https://github.com/olajep/rpi-cecd/tree/binary
 * ... or download the official SDK from:
   https://github.com/raspberrypi/tools/tree/master/arm-bcm2708
 * Point $SDKSTAGE to the target filesystem root
+* export CC=/path/to/armv6zk-openelec-linux-gnueabi-gcc
 * make
 
 ##Make it work on OpenElec:
@@ -18,6 +19,10 @@ https://github.com/olajep/rpi-cecd/tree/binary
 * scp rpi-cecd root@'your-openelec-ip':~
 * ssh root@'your-openelec-ip'
 * ./rpi-cecd &
-* You have to do this on every boot
+* echo '#!/bin/sh' >> /storage/.config/autostart.sh
+* echo '/storage/rpi-cecd &' >> /storage/.config/autostart.sh
+* chmod +x /storage/.config/autostart.sh
+* ...
+* Profit
 
 
