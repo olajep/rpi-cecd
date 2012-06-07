@@ -36,6 +36,7 @@ extern int32_t vchi_connect( VCHI_CONNECTION_T **connections,
 #endif
 
 volatile int might_be_dimmed=0;
+int port = 80;
 
 size_t curl_write_nop(void *buffer, size_t size, size_t nmemb, void *userp)
 {
@@ -64,8 +65,8 @@ void xbmc_sendkey(uint32_t keysym)
     char url[256];
 
     snprintf(url, 255,
-            "http://localhost:80/xbmcCmds/xbmcHttp?command=SendKey(%d)",
-            keysym);
+            "http://localhost:%d/xbmcCmds/xbmcHttp?command=SendKey(%d)",
+            port, keysym);
     curl_get(url);
 }
 
@@ -75,8 +76,8 @@ void xbmc_sendaction(uint32_t action)
     char url[256];
 
     snprintf(url, 255,
-            "http://localhost:80/xbmcCmds/xbmcHttp?command=Action(%d)",
-            action);
+            "http://localhost:%d/xbmcCmds/xbmcHttp?command=Action(%d)",
+            port, action);
     curl_get(url);
 
 }
@@ -209,7 +210,7 @@ void cec_callback(void *callback_data, uint32_t param0,
     }
 }
 
-int main ()
+int main(int argc, char **argv)
 {
     int res = 0;
     CURLcode curlerr;
@@ -218,6 +219,15 @@ int main ()
     VCHI_CONNECTION_T *vchi_connection;
     CEC_AllDevices_T logical_address;
     uint16_t physical_address;
+
+    if (argc > 2) {
+        printf("usage: %s [port]\n", argv[0]);
+        return -1;
+    }
+
+    if (argc == 2) {
+        port = atoi(argv[1]);
+    }
 
     curlerr = curl_global_init(CURL_GLOBAL_NOTHING);
     if ( curlerr ) {
