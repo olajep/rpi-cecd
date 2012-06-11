@@ -202,6 +202,13 @@ void cec_callback(void *callback_data, uint32_t param0,
                     reason, len, retval, param1, param2, param3, param4);
         }
         button_pressed(param1);
+    } else if (reason == VC_CEC_RX && CEC_CB_OPCODE(param1) == CEC_Opcode_MenuRequest ) {
+        if (CEC_CB_OPERAND1(param1) == CEC_MENU_STATE_QUERY ) {
+            uint8_t msg[2];
+            msg[0] = CEC_Opcode_MenuStatus;
+            msg[1] = CEC_MENU_STATE_ACTIVATED;
+            vc_cec_send_message(0, msg, 2, 1);
+        }
     } else if ( reason != VC_CEC_BUTTON_RELEASE ) {
         printf("cec_callback: unknown event: "
                 "reason=0x%04x, len=0x%02x, retval=0x%02x, "
@@ -266,6 +273,8 @@ int main(int argc, char **argv)
 #if 0
     vc_cec_register_all();
 #endif
+
+    vc_cec_register_command(CEC_Opcode_MenuRequest);
 
     vc_cec_get_logical_address(&logical_address);
     printf("logical_address: 0x%x\n", logical_address);
