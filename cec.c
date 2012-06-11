@@ -22,6 +22,10 @@ extern "C" {
 #include "config.h"
 #include "Key.h"
 
+#ifndef VC_TRUE
+#define VC_TRUE 1
+#endif
+
 /* Remove this block when everyone is using the latest headers from 
  * RPi firmware github page
  */
@@ -205,9 +209,11 @@ void cec_callback(void *callback_data, uint32_t param0,
     } else if (reason == VC_CEC_RX && CEC_CB_OPCODE(param1) == CEC_Opcode_MenuRequest ) {
         if (CEC_CB_OPERAND1(param1) == CEC_MENU_STATE_QUERY ) {
             uint8_t msg[2];
+            uint32_t initiator;
+            initiator = CEC_CB_INITIATOR(param1);
             msg[0] = CEC_Opcode_MenuStatus;
             msg[1] = CEC_MENU_STATE_ACTIVATED;
-            vc_cec_send_message(0, msg, 2, 1);
+            vc_cec_send_message(initiator, msg, 2, VC_TRUE);
         }
     } else if ( reason != VC_CEC_BUTTON_RELEASE ) {
         printf("cec_callback: unknown event: "
