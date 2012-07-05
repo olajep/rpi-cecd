@@ -111,6 +111,36 @@ void button_pressed(uint32_t param)
     }
 
     switch (operand1) {
+        case CEC_User_Control_Number0:
+            xbmc_sendaction(REMOTE_0);
+            break;
+        case CEC_User_Control_Number1:
+            xbmc_sendaction(REMOTE_1);
+            break;
+        case CEC_User_Control_Number2:
+            xbmc_sendaction(REMOTE_2);
+            break;
+        case CEC_User_Control_Number3:
+            xbmc_sendaction(REMOTE_3);
+            break;
+        case CEC_User_Control_Number4:
+            xbmc_sendaction(REMOTE_4);
+            break;
+        case CEC_User_Control_Number5:
+            xbmc_sendaction(REMOTE_5);
+            break;
+        case CEC_User_Control_Number6:
+            xbmc_sendaction(REMOTE_6);
+            break;
+        case CEC_User_Control_Number7:
+            xbmc_sendaction(REMOTE_7);
+            break;
+        case CEC_User_Control_Number8:
+            xbmc_sendaction(REMOTE_8);
+            break;
+        case CEC_User_Control_Number9:
+            xbmc_sendaction(REMOTE_9);
+            break;
         case CEC_User_Control_Select:
             xbmc_sendaction(ACTION_SELECT_ITEM);
             break;
