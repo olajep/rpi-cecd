@@ -252,6 +252,17 @@ void cec_callback(void *callback_data, uint32_t param0,
                 vc_cec_send_message(initiator, msg, 2, VC_TRUE);
             }
             break;
+        case CEC_Opcode_Play:
+            if (operand1 == CEC_PLAY_FORWARD) {
+                xbmc_sendaction(ACTION_PLAYER_PLAYPAUSE );
+            } else if (operand1 == CEC_PLAY_STILL) {
+                xbmc_sendaction(ACTION_PLAYER_PLAYPAUSE );
+            }
+            break;
+        case CEC_Opcode_DeckControl:
+            if (operand1 == CEC_DECK_CTRL_STOP) {
+                xbmc_sendaction(ACTION_STOP);
+            }
         }
         break;
     case VC_CEC_BUTTON_RELEASE:
@@ -296,7 +307,6 @@ int main(int argc, char **argv)
     }
 
 
-
     res = vchi_initialise(&vchiq_instance);
     if ( res != VCHIQ_SUCCESS ) {
         printf("failed to open vchiq instance\n");
@@ -317,11 +327,14 @@ int main(int argc, char **argv)
 
     vc_cec_register_callback(((CECSERVICE_CALLBACK_T) cec_callback), NULL);
 
+
 #if 0
     vc_cec_register_all();
 #endif
 
     vc_cec_register_command(CEC_Opcode_MenuRequest);
+    vc_cec_register_command(CEC_Opcode_Play);
+    vc_cec_register_command(CEC_Opcode_DeckControl);
 
     vc_cec_get_logical_address(&logical_address);
     printf("logical_address: 0x%x\n", logical_address);
