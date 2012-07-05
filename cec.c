@@ -227,8 +227,9 @@ void cec_callback(void *callback_data, uint32_t param0,
             "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
             reason, len, retval, param1, param2, param3, param4);
 #endif
-
-    if ( reason == VC_CEC_BUTTON_PRESSED ) {
+    uint32_t opcode, operand1;
+    switch (reason) {
+    case VC_CEC_BUTTON_PRESSED:
         if ( len > 4 ) {
             printf("cec_callback: warning: len > 4, only using first parameter "
                     "reason=0x%04x, len=0x%02x, retval=0x%02x, "
@@ -236,20 +237,30 @@ void cec_callback(void *callback_data, uint32_t param0,
                     reason, len, retval, param1, param2, param3, param4);
         }
         button_pressed(param1);
-    } else if (reason == VC_CEC_RX && CEC_CB_OPCODE(param1) == CEC_Opcode_MenuRequest ) {
-        if (CEC_CB_OPERAND1(param1) == CEC_MENU_STATE_QUERY ) {
-            uint8_t msg[2];
-            uint32_t initiator;
-            initiator = CEC_CB_INITIATOR(param1);
-            msg[0] = CEC_Opcode_MenuStatus;
-            msg[1] = CEC_MENU_STATE_ACTIVATED;
-            vc_cec_send_message(initiator, msg, 2, VC_TRUE);
+        break;
+    case VC_CEC_RX:
+        opcode   = CEC_CB_OPCODE(param1);
+        operand1 = CEC_CB_OPERAND1(param1);
+        switch (opcode) {
+        case CEC_Opcode_MenuRequest:
+            if (operand1 == CEC_MENU_STATE_QUERY) {
+                uint8_t msg[2];
+                uint32_t initiator;
+                initiator = CEC_CB_INITIATOR(param1);
+                msg[0] = CEC_Opcode_MenuStatus;
+                msg[1] = CEC_MENU_STATE_ACTIVATED;
+                vc_cec_send_message(initiator, msg, 2, VC_TRUE);
+            }
+            break;
         }
-    } else if ( reason != VC_CEC_BUTTON_RELEASE ) {
+        break;
+    case VC_CEC_BUTTON_RELEASE:
+        break;
+    default:
         printf("cec_callback: unknown event: "
-                "reason=0x%04x, len=0x%02x, retval=0x%02x, "
-                "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
-                reason, len, retval, param1, param2, param3, param4);
+            "reason=0x%04x, len=0x%02x, retval=0x%02x, "
+            "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
+            reason, len, retval, param1, param2, param3, param4);
     }
 }
 
