@@ -8,9 +8,9 @@ This is a quick hack to make HDMI-CEC work with OpenElec on Raspberry Pi.
 ```
 export SYSROOT=/path/to/OpenELEC.tv/build.OpenELEC-RPi.arm-devel/toolchain/armv6zk-openelec-linux-gnueabi/sysroot
 ```
-* Point $CC to the cross compiler
+* Point $CXX to the cross compiler
 ```
-export CC=/path/to/OpenELEC.tv/build.OpenELEC-RPi.arm-devel/toolchain/bin/armv6zk-openelec-linux-gnueabi-gcc
+export CXX=/path/to/OpenELEC.tv/build.OpenELEC-RPi.arm-devel/toolchain/bin/armv6zk-openelec-linux-gnueabi-g++
 ```
 * make
 ```

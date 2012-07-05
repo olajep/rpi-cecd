@@ -1,9 +1,9 @@
 OBJS = cec.o
 BIN = rpi-cecd
 
-CC ?= gcc
+CXX ?= g++
 
-CFLAGS ?= \
+CXXFLAGS ?= \
 	-I=/usr/include/interface/vcos/pthreads \
 	-I=/opt/vc/include/ \
 	-I=/opt/vc/include/interface/vcos/pthreads
@@ -18,12 +18,12 @@ LIBS = -lbcm_host -lvcos -lvchiq_arm -lcurl
 
 all: $(BIN)
 
-%.o: %.c
+%.o: %.cpp
 	@rm -f $@
-	$(CC) --sysroot=$(SYSROOT) $(CFLAGS) $(OPTS) -g -c $< -o $@ -Wall
+	$(CXX) --sysroot=$(SYSROOT) $(CXXFLAGS) $(OPTS) -g -c $< -o $@ -Wall
 
 $(BIN) : $(OBJS)
-	$(CC) --sysroot=$(SYSROOT) -o $@ $(OBJS) $(LIBS) $(LDFLAGS) -rdynamic
+	$(CXX) --sysroot=$(SYSROOT) -o $@ $(OBJS) $(LIBS) $(LDFLAGS) -rdynamic
 
 clean:
 	for i in $(OBJS); do (if test -e "$$i"; then ( rm $$i ); fi ); done
