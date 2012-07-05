@@ -1,3 +1,27 @@
+/**
+ *  Copyright © 2012 Ola Jeppsson
+ *
+ *  Subject to the conditions below, you may, without charge:
+ *
+ *  ·  Use, copy, modify and/or merge copies of this software and
+ *     associated documentation files (the "Software")
+ *
+ *  ·  Publish, distribute, sub-licence and/or sell new software
+ *     derived from or incorporating the Software.
+ *
+ *
+ *  This file, unmodified, shall be included with all copies or
+ *  substantial portions
+ *  of the Software that are distributed in source code form.
+ *
+ *  Any person dealing with the Software shall not misrepresent
+ *  the source of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+ *  KIND.
+ */
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
