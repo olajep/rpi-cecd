@@ -14,7 +14,7 @@ OPTS = -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS            \
 	   -pipe -DUSE_VCHIQ_ARM -Wno-psabi
 
 LDFLAGS ?= -L=/opt/vc/lib/
-LIBS = -lbcm_host -lvcos -lvchiq_arm -lcurl
+LIBS = -lbcm_host -lvcos -lvchiq_arm
 
 all: $(BIN)
 

@@ -22,10 +22,7 @@
  */
 
 
-#ifdef __cplusplus
 extern "C" {
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,69 +30,38 @@ extern "C" {
 #include <assert.h>
 #include <unistd.h>
 
-#include <curl/curl.h>
-
-
 #include <interface/vmcs_host/vc_cecservice.h>
 #include <interface/vchiq_arm/vchiq_if.h>
-
-#ifdef __cplusplus
 }
-#endif
+
 
 #include "config.h"
-#include "Key.h"
+#include "xbmcclient.h"
+
 
 #ifndef VC_TRUE
 #define VC_TRUE 1
 #endif
 
-volatile int might_be_dimmed=0;
-int port = 80;
-
-size_t curl_write_nop(void *buffer, size_t size, size_t nmemb, void *userp)
+class CECXBMCClient : public CXBMCClient
 {
-    return size*nmemb;
-}
-
-void curl_get(char *url)
-{
-    CURL *curl;
-    CURLcode err;
-
-    curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_nop);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000);
-    err = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-
-    if ( err ) {
-        printf("curl_get: error=%d \"%s\"\n", err, curl_easy_strerror(err));
+public:
+    void SendButton(const char* Button,
+            unsigned short Flags=(BTN_USE_NAME|BTN_NO_REPEAT))
+    {
+        // Simplest approach seems to be to emulate an XBOX R1 Remote.
+        // The ideal solution imo is to send 'raw' CEC events
+        // ie. "CEC_User_Control_Select" ... and then let XBMC
+        // decide what to do.
+        static char DeviceMap[] = "R1";
+        CXBMCClient::SendButton(Button, DeviceMap, Flags);
     }
-}
-
-void xbmc_sendkey(uint32_t keysym)
-{
-    char url[256];
-
-    snprintf(url, 255,
-            "http://localhost:%d/xbmcCmds/xbmcHttp?command=SendKey(%d)",
-            port, keysym);
-    curl_get(url);
-}
+};
 
 
-void xbmc_sendaction(uint32_t action)
-{
-    char url[256];
+CECXBMCClient xbmc;
+volatile int might_be_dimmed=0;
 
-    snprintf(url, 255,
-            "http://localhost:%d/xbmcCmds/xbmcHttp?command=Action(%d)",
-            port, action);
-    curl_get(url);
-
-}
 
 void button_pressed(uint32_t param)
 {
@@ -118,102 +84,106 @@ void button_pressed(uint32_t param)
     // Hack to make xbmc light up
     if (might_be_dimmed) {
         might_be_dimmed = 0;
-        xbmc_sendkey(KEY_ASCII);
+        xbmc.SendButton(" ");
     }
 
     switch (operand1) {
         case CEC_User_Control_Number0:
-            xbmc_sendaction(REMOTE_0);
+            xbmc.SendButton("zero");
             break;
         case CEC_User_Control_Number1:
-            xbmc_sendaction(REMOTE_1);
+            xbmc.SendButton("one");
             break;
         case CEC_User_Control_Number2:
-            xbmc_sendaction(REMOTE_2);
+            xbmc.SendButton("two");
             break;
         case CEC_User_Control_Number3:
-            xbmc_sendaction(REMOTE_3);
+            xbmc.SendButton("three");
             break;
         case CEC_User_Control_Number4:
-            xbmc_sendaction(REMOTE_4);
+            xbmc.SendButton("four");
             break;
         case CEC_User_Control_Number5:
-            xbmc_sendaction(REMOTE_5);
+            xbmc.SendButton("five");
             break;
         case CEC_User_Control_Number6:
-            xbmc_sendaction(REMOTE_6);
+            xbmc.SendButton("six");
             break;
         case CEC_User_Control_Number7:
-            xbmc_sendaction(REMOTE_7);
+            xbmc.SendButton("seven");
             break;
         case CEC_User_Control_Number8:
-            xbmc_sendaction(REMOTE_8);
+            xbmc.SendButton("eight");
             break;
         case CEC_User_Control_Number9:
-            xbmc_sendaction(REMOTE_9);
+            xbmc.SendButton("nine");
             break;
         case CEC_User_Control_Select:
-            xbmc_sendaction(ACTION_SELECT_ITEM);
+            xbmc.SendButton("select");
             break;
         case CEC_User_Control_Up:
-            xbmc_sendaction(ACTION_MOVE_UP);
+            xbmc.SendButton("up");
             break;
         case CEC_User_Control_Down:
-            xbmc_sendaction(ACTION_MOVE_DOWN);
+            xbmc.SendButton("down");
             break;
         case CEC_User_Control_Left:
-            xbmc_sendaction(ACTION_MOVE_LEFT);
+            xbmc.SendButton("left");
             break;
         case CEC_User_Control_Right:
-            xbmc_sendaction(ACTION_MOVE_RIGHT);
+            xbmc.SendButton("right");
             break;
         case CEC_User_Control_RootMenu:
-            xbmc_sendaction(ACTION_PREVIOUS_MENU);
+            xbmc.SendButton("menu");
             break;
         case CEC_User_Control_SetupMenu:
+            xbmc.SendButton("title");
+            break;
         case CEC_User_Control_DisplayInformation:
-            xbmc_sendaction(ACTION_CONTEXT_MENU);
+            xbmc.SendButton("info");
             break;
         case CEC_User_Control_Exit:
-            xbmc_sendaction(ACTION_NAV_BACK);
+            xbmc.SendButton("back");
             break;
 
         case CEC_User_Control_EPG:
-            xbmc_sendaction(ACTION_SHOW_PLAYLIST);
-            break; 
+            xbmc.SendButton("playlist");
+            break;
 
         case CEC_User_Control_Play:
+            xbmc.SendButton("play");
+            break;
         case CEC_User_Control_Pause:
-            xbmc_sendaction(ACTION_PLAYER_PLAYPAUSE );
+            xbmc.SendButton("pause");
             break;
         case CEC_User_Control_Stop:
-            xbmc_sendaction(ACTION_STOP);
+            xbmc.SendButton("stop");
             break;
         case CEC_User_Control_Rewind:
-            xbmc_sendaction(ACTION_PLAYER_REWIND);
+            xbmc.SendButton("reverse");
             break;
         case CEC_User_Control_FastForward:
-            xbmc_sendaction(ACTION_PLAYER_FORWARD);
+            xbmc.SendButton("forward");
             break;
         case CEC_User_Control_Forward:
-            xbmc_sendaction(ACTION_FORWARD);
+            xbmc.SendButton("skipplus");
             break;
         case CEC_User_Control_Backward:
-            xbmc_sendaction(ACTION_REWIND);
+            xbmc.SendButton("skipminus");
             break;
 
             // Colored buttons from left to right
         case CEC_User_Control_F2Red:
-            xbmc_sendaction(ACTION_TELETEXT_RED);
+            xbmc.SendButton("red");
             break;
         case CEC_User_Control_F3Green:
-            xbmc_sendaction(ACTION_TELETEXT_GREEN);
+            xbmc.SendButton("green");
             break;
         case CEC_User_Control_F4Yellow:
-            xbmc_sendaction(ACTION_TELETEXT_YELLOW);
+            xbmc.SendButton("yellow");
             break;
         case CEC_User_Control_F1Blue:
-            xbmc_sendaction(ACTION_TELETEXT_BLUE);
+            xbmc.SendButton("blue");
             break;
 
         default:
@@ -265,14 +235,14 @@ void cec_callback(void *callback_data, uint32_t param0,
             break;
         case CEC_Opcode_Play:
             if (operand1 == CEC_PLAY_FORWARD) {
-                xbmc_sendaction(ACTION_PLAYER_PLAYPAUSE );
+                xbmc.SendButton("play");
             } else if (operand1 == CEC_PLAY_STILL) {
-                xbmc_sendaction(ACTION_PLAYER_PLAYPAUSE );
+                xbmc.SendButton("pause");
             }
             break;
         case CEC_Opcode_DeckControl:
             if (operand1 == CEC_DECK_CTRL_STOP) {
-                xbmc_sendaction(ACTION_STOP);
+                xbmc.SendButton("stop");
             }
         }
         break;
@@ -289,7 +259,6 @@ void cec_callback(void *callback_data, uint32_t param0,
 int main(int argc, char **argv)
 {
     int res = 0;
-    CURLcode curlerr;
 
     VCHI_INSTANCE_T vchiq_instance;
     VCHI_CONNECTION_T *vchi_connection;
@@ -299,24 +268,6 @@ int main(int argc, char **argv)
     /* Make sure logs are written to disk */
     setlinebuf(stdout);
     setlinebuf(stderr);
-
-
-    if (argc > 2) {
-        printf("usage: %s [port]\n", argv[0]);
-        return -1;
-    }
-
-    if (argc == 2) {
-        port = atoi(argv[1]);
-    }
-
-    curlerr = curl_global_init(CURL_GLOBAL_NOTHING);
-    if ( curlerr ) {
-        printf("failed to init curl error=%d \"%s\"\n", curlerr,
-                curl_easy_strerror(curlerr));
-        return -1;
-    }
-
 
     res = vchi_initialise(&vchiq_instance);
     if ( res != VCHIQ_SUCCESS ) {
@@ -358,6 +309,7 @@ int main(int argc, char **argv)
 
     vc_cec_send_ActiveSource(physical_address, 0);
 
+    xbmc.SendHELO("rpi-cecd", ICON_NONE);
 
     while (1) {
         might_be_dimmed = 1;
@@ -365,8 +317,6 @@ int main(int argc, char **argv)
     }
 
     vchi_exit();
-
-    curl_global_cleanup();
 
     return 0;
 }
