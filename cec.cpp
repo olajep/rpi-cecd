@@ -82,6 +82,28 @@ void button_pressed(uint32_t param)
     }
 }
 
+void debug(const char *s, uint32_t param0,
+        uint32_t param1, uint32_t param2,
+        uint32_t param3, uint32_t param4)
+{
+#ifdef DEBUG
+    VC_CEC_NOTIFY_T reason  = (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);
+    uint32_t len     = CEC_CB_MSG_LENGTH(param0);
+    uint32_t retval  = CEC_CB_RC(param0);
+
+    static char empty = '\0';
+    if (s == NULL) {
+        s = &empty;
+    }
+
+    printf("%s"
+        "reason=0x%04x, len=0x%02x, retval=0x%02x, "
+        "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
+        s, reason, len, retval, param1, param2, param3, param4);
+
+#endif
+}
+
 void cec_callback(void *callback_data, uint32_t param0,
         uint32_t param1, uint32_t param2,
         uint32_t param3, uint32_t param4)
@@ -93,12 +115,8 @@ void cec_callback(void *callback_data, uint32_t param0,
     len     = CEC_CB_MSG_LENGTH(param0);
     retval  = CEC_CB_RC(param0);
 
-#ifdef DEBUG
-    printf("cec_callback: debug: "
-            "reason=0x%04x, len=0x%02x, retval=0x%02x, "
-            "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
-            reason, len, retval, param1, param2, param3, param4);
-#endif
+    debug("cec_callback: debug: ",
+        param0, param1, param2, param3, param4);
 
     if (reason == VC_CEC_TX) {
         // Dont care
@@ -141,10 +159,8 @@ void cec_callback(void *callback_data, uint32_t param0,
         }
         break;
     default:
-        printf("cec_callback: unknown event: "
-            "reason=0x%04x, len=0x%02x, retval=0x%02x, "
-            "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
-            reason, len, retval, param1, param2, param3, param4);
+        debug("cec_callback: unknown event: ",
+            param0, param1, param2, param3, param4);
     }
 }
 
