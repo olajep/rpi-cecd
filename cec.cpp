@@ -64,23 +64,10 @@ CECXBMCClient xbmc;
 
 void button_pressed(uint32_t param)
 {
-    uint32_t initiator, follower, opcode, operand1, operand2;
 
-    initiator = CEC_CB_INITIATOR(param);
-    follower  = CEC_CB_FOLLOWER(param);
-    opcode    = CEC_CB_OPCODE(param);
-    operand1  = CEC_CB_OPERAND1(param);
-    operand2  = CEC_CB_OPERAND2(param);
-
-    if (opcode != CEC_Opcode_UserControlPressed) {
-        printf("button_pressed: unknown operand operand1=0x%x: "
-                "initiator=0x%x, follower=0x%x, opcode=0x%x, "
-                "operand1=0x%x, operand2=0x%x\n",
-                operand1, initiator, follower, opcode, operand1, operand2);
-        return;
-    }
-
+    uint32_t operand1  = CEC_CB_OPERAND1(param);
     const char *xbmcKey = NULL;
+
     for (unsigned int i=0; i < CECXBMCKeymapElements; ++i) {
         if (CECXBMCKeymap[i].cec == operand1) {
             xbmcKey = CECXBMCKeymap[i].xbmc;
