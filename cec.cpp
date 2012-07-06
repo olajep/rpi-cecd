@@ -100,48 +100,47 @@ void cec_callback(void *callback_data, uint32_t param0,
             reason, len, retval, param1, param2, param3, param4);
 #endif
 
-    if ( reason == VC_CEC_BUTTON_PRESSED ||
-         reason == VC_CEC_BUTTON_RELEASE ||
-         reason == VC_CEC_RX) {
+    if (reason == VC_CEC_TX) {
+        // Dont care
+        return;
+    }
 
-        uint32_t opcode   = CEC_CB_OPCODE(param1);
-        uint32_t operand1 = CEC_CB_OPERAND1(param1);
+    uint32_t opcode   = CEC_CB_OPCODE(param1);
+    uint32_t operand1 = CEC_CB_OPERAND1(param1);
 
-        switch (opcode) {
-        case CEC_Opcode_UserControlPressed:
-            button_pressed(param1);
-            break;
+    switch (opcode) {
+    case CEC_Opcode_UserControlPressed:
+        button_pressed(param1);
+        break;
 
-        case CEC_Opcode_UserControlReleased:
-            break;
+    case CEC_Opcode_UserControlReleased:
+        break;
 
-        case CEC_Opcode_MenuRequest:
-            if (operand1 == CEC_MENU_STATE_QUERY) {
-                uint8_t msg[2];
-                uint32_t initiator;
-                initiator = CEC_CB_INITIATOR(param1);
-                msg[0] = CEC_Opcode_MenuStatus;
-                msg[1] = CEC_MENU_STATE_ACTIVATED;
-                vc_cec_send_message(initiator, msg, 2, VC_TRUE);
-            }
-            break;
-
-        case CEC_Opcode_Play:
-            if (operand1 == CEC_PLAY_FORWARD) {
-                xbmc.SendButton("play");
-            } else if (operand1 == CEC_PLAY_STILL) {
-                xbmc.SendButton("pause");
-            }
-            break;
-
-        case CEC_Opcode_DeckControl:
-            if (operand1 == CEC_DECK_CTRL_STOP) {
-                xbmc.SendButton("stop");
-            }
-            break;
+    case CEC_Opcode_MenuRequest:
+        if (operand1 == CEC_MENU_STATE_QUERY) {
+            uint8_t msg[2];
+            uint32_t initiator;
+            initiator = CEC_CB_INITIATOR(param1);
+            msg[0] = CEC_Opcode_MenuStatus;
+            msg[1] = CEC_MENU_STATE_ACTIVATED;
+            vc_cec_send_message(initiator, msg, 2, VC_TRUE);
         }
+        break;
 
-    } else {
+    case CEC_Opcode_Play:
+        if (operand1 == CEC_PLAY_FORWARD) {
+            xbmc.SendButton("play");
+        } else if (operand1 == CEC_PLAY_STILL) {
+            xbmc.SendButton("pause");
+        }
+        break;
+
+    case CEC_Opcode_DeckControl:
+        if (operand1 == CEC_DECK_CTRL_STOP) {
+            xbmc.SendButton("stop");
+        }
+        break;
+    default:
         printf("cec_callback: unknown event: "
             "reason=0x%04x, len=0x%02x, retval=0x%02x, "
             "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
