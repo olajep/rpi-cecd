@@ -115,13 +115,17 @@ void cec_callback(void *callback_data, uint32_t param0,
     len     = CEC_CB_MSG_LENGTH(param0);
     retval  = CEC_CB_RC(param0);
 
-    debug("cec_callback: debug: ",
-        param0, param1, param2, param3, param4);
 
     if (reason == VC_CEC_TX) {
-        // Dont care
+        if (retval) {
+            debug("cec_callback: failed transmission: ",
+                param0, param1, param2, param3, param4);
+        }
         return;
     }
+
+    debug("cec_callback: debug: ",
+        param0, param1, param2, param3, param4);
 
     uint32_t opcode   = CEC_CB_OPCODE(param1);
     uint32_t operand1 = CEC_CB_OPERAND1(param1);
