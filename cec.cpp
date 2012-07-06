@@ -61,8 +61,6 @@ public:
 
 
 CECXBMCClient xbmc;
-volatile int might_be_dimmed=0;
-
 
 void button_pressed(uint32_t param)
 {
@@ -80,12 +78,6 @@ void button_pressed(uint32_t param)
                 "operand1=0x%x, operand2=0x%x\n",
                 operand1, initiator, follower, opcode, operand1, operand2);
         return;
-    }
-
-    // Hack to make xbmc light up
-    if (might_be_dimmed) {
-        might_be_dimmed = 0;
-        xbmc.SendButton(" ");
     }
 
     const char *xbmcKey = NULL;
@@ -224,7 +216,6 @@ int main(int argc, char **argv)
     xbmc.SendHELO("rpi-cecd", ICON_NONE);
 
     while (1) {
-        might_be_dimmed = 1;
         sleep(10);
     }
 
