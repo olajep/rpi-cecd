@@ -37,6 +37,7 @@ extern "C" {
 
 #include "config.h"
 #include "xbmcclient.h"
+#include "cecxbmckeymap.h"
 
 
 #ifndef VC_TRUE
@@ -87,107 +88,18 @@ void button_pressed(uint32_t param)
         xbmc.SendButton(" ");
     }
 
-    switch (operand1) {
-        case CEC_User_Control_Number0:
-            xbmc.SendButton("zero");
+    const char *xbmcKey = NULL;
+    for (unsigned int i=0; i < CECXBMCKeymapElements; ++i) {
+        if (CECXBMCKeymap[i].cec == operand1) {
+            xbmcKey = CECXBMCKeymap[i].xbmc;
             break;
-        case CEC_User_Control_Number1:
-            xbmc.SendButton("one");
-            break;
-        case CEC_User_Control_Number2:
-            xbmc.SendButton("two");
-            break;
-        case CEC_User_Control_Number3:
-            xbmc.SendButton("three");
-            break;
-        case CEC_User_Control_Number4:
-            xbmc.SendButton("four");
-            break;
-        case CEC_User_Control_Number5:
-            xbmc.SendButton("five");
-            break;
-        case CEC_User_Control_Number6:
-            xbmc.SendButton("six");
-            break;
-        case CEC_User_Control_Number7:
-            xbmc.SendButton("seven");
-            break;
-        case CEC_User_Control_Number8:
-            xbmc.SendButton("eight");
-            break;
-        case CEC_User_Control_Number9:
-            xbmc.SendButton("nine");
-            break;
-        case CEC_User_Control_Select:
-            xbmc.SendButton("select");
-            break;
-        case CEC_User_Control_Up:
-            xbmc.SendButton("up");
-            break;
-        case CEC_User_Control_Down:
-            xbmc.SendButton("down");
-            break;
-        case CEC_User_Control_Left:
-            xbmc.SendButton("left");
-            break;
-        case CEC_User_Control_Right:
-            xbmc.SendButton("right");
-            break;
-        case CEC_User_Control_RootMenu:
-            xbmc.SendButton("menu");
-            break;
-        case CEC_User_Control_SetupMenu:
-            xbmc.SendButton("title");
-            break;
-        case CEC_User_Control_DisplayInformation:
-            xbmc.SendButton("info");
-            break;
-        case CEC_User_Control_Exit:
-            xbmc.SendButton("back");
-            break;
+        }
+    }
 
-        case CEC_User_Control_EPG:
-            xbmc.SendButton("playlist");
-            break;
-
-        case CEC_User_Control_Play:
-            xbmc.SendButton("play");
-            break;
-        case CEC_User_Control_Pause:
-            xbmc.SendButton("pause");
-            break;
-        case CEC_User_Control_Stop:
-            xbmc.SendButton("stop");
-            break;
-        case CEC_User_Control_Rewind:
-            xbmc.SendButton("reverse");
-            break;
-        case CEC_User_Control_FastForward:
-            xbmc.SendButton("forward");
-            break;
-        case CEC_User_Control_Forward:
-            xbmc.SendButton("skipplus");
-            break;
-        case CEC_User_Control_Backward:
-            xbmc.SendButton("skipminus");
-            break;
-
-            // Colored buttons from left to right
-        case CEC_User_Control_F2Red:
-            xbmc.SendButton("red");
-            break;
-        case CEC_User_Control_F3Green:
-            xbmc.SendButton("green");
-            break;
-        case CEC_User_Control_F4Yellow:
-            xbmc.SendButton("yellow");
-            break;
-        case CEC_User_Control_F1Blue:
-            xbmc.SendButton("blue");
-            break;
-
-        default:
-            printf("button_pressed: operand1=0x%x has no binding\n", operand1);
+    if (xbmcKey != NULL) {
+        xbmc.SendButton(xbmcKey);
+    } else {
+        printf("button_pressed: operand1=0x%x has no binding\n", operand1);
     }
 }
 
