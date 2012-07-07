@@ -82,6 +82,45 @@ void UserControlPressed(uint32_t param)
     }
 }
 
+void MenuRequest(uint32_t param)
+{
+    uint32_t operand1 = CEC_CB_OPERAND1(param);
+    if (operand1 == CEC_MENU_STATE_QUERY) {
+        uint8_t msg[2];
+        uint32_t initiator;
+        initiator = CEC_CB_INITIATOR(param);
+        msg[0] = CEC_Opcode_MenuStatus;
+        msg[1] = CEC_MENU_STATE_ACTIVATED;
+        vc_cec_send_message(initiator, msg, 2, VC_TRUE);
+    } else {
+        printf("MenuRequest: operand1=0x%x unknown\n", operand1);
+    }
+}
+
+void Play(uint32_t param) {
+    uint32_t operand1 = CEC_CB_OPERAND1(param);
+    switch (operand1) {
+    case CEC_PLAY_FORWARD:
+        xbmc.SendButton("play");
+        break;
+    case CEC_PLAY_STILL:
+        xbmc.SendButton("pause");
+        break;
+    default:
+        printf("MenuRequest: operand1=0x%x not implemented\n", operand1);
+    }
+}
+
+void DeckControl(uint32_t param) {
+    uint32_t operand1 = CEC_CB_OPERAND1(param);
+    if (operand1 == CEC_DECK_CTRL_STOP) {
+        xbmc.SendButton("stop");
+    } else {
+        printf("DeckControl: operand1=0x%x not implemented\n", operand1);
+    }
+}
+
+
 void debug(const char *s, uint32_t param0,
         uint32_t param1, uint32_t param2,
         uint32_t param3, uint32_t param4)
@@ -128,40 +167,12 @@ void cec_callback(void *callback_data, uint32_t param0,
         param0, param1, param2, param3, param4);
 
     uint32_t opcode   = CEC_CB_OPCODE(param1);
-    uint32_t operand1 = CEC_CB_OPERAND1(param1);
-
     switch (opcode) {
-    case CEC_Opcode_UserControlPressed:
-        UserControlPressed(param1);
-        break;
-
-    case CEC_Opcode_UserControlReleased:
-        break;
-
-    case CEC_Opcode_MenuRequest:
-        if (operand1 == CEC_MENU_STATE_QUERY) {
-            uint8_t msg[2];
-            uint32_t initiator;
-            initiator = CEC_CB_INITIATOR(param1);
-            msg[0] = CEC_Opcode_MenuStatus;
-            msg[1] = CEC_MENU_STATE_ACTIVATED;
-            vc_cec_send_message(initiator, msg, 2, VC_TRUE);
-        }
-        break;
-
-    case CEC_Opcode_Play:
-        if (operand1 == CEC_PLAY_FORWARD) {
-            xbmc.SendButton("play");
-        } else if (operand1 == CEC_PLAY_STILL) {
-            xbmc.SendButton("pause");
-        }
-        break;
-
-    case CEC_Opcode_DeckControl:
-        if (operand1 == CEC_DECK_CTRL_STOP) {
-            xbmc.SendButton("stop");
-        }
-        break;
+    case CEC_Opcode_UserControlPressed:  UserControlPressed(param1); break;
+    case CEC_Opcode_UserControlReleased: /* NOP */                   break;
+    case CEC_Opcode_MenuRequest:         MenuRequest(param1);        break;
+    case CEC_Opcode_Play:                Play(param1);               break;
+    case CEC_Opcode_DeckControl:         DeckControl(param1);        break;
     default:
         debug("cec_callback: unknown event: ",
             param0, param1, param2, param3, param4);
