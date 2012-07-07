@@ -333,6 +333,8 @@ int main(int argc, char **argv)
         printf( "could not get TV vendor ID\n" );
         return -1;
     }
+    printf("TV Vendor ID: 0x%x\n", tvVendorId);
+
 
     vc_cec_register_callback(((CECSERVICE_CALLBACK_T) cec_callback), NULL);
 
@@ -352,6 +354,7 @@ int main(int argc, char **argv)
     printf("logical_address: 0x%x\n", logical_address);
 
     if (tvVendorId == CEC_VENDOR_ID_LG) {
+        printf("Setting Vendor Id to LG\n");
         myVendorId = tvVendorId;
         vc_cec_set_vendor_id(myVendorId);
         uint8_t msg[4];
