@@ -166,20 +166,11 @@ void VendorCommand_LG(uint32_t param)
         vc_cec_send_message(initiator, msg, 3, VC_TRUE);
         // Transmit Image View On
         msg[0] = CEC_Opcode_ImageViewOn;
-        msg[1] = 0;
-        msg[2] = 0;
-        vc_cec_send_message(initiator, msg, 1, VC_TRUE);
+        vc_cec_send_ImageViewOn(initiator, VC_TRUE);
         //Transmit Active source
-        msg[0] = CEC_Opcode_ActiveSource;
-        msg[1] = 0x10;
-        msg[2] = 0x00;
-        vc_cec_send_message(CEC_BROADCAST_ADDR, msg, 3, VC_FALSE);
+        vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
         // Transmit menu state CEC_DEVICE_TV
-        msg[0] = CEC_Opcode_MenuStatus;
-        msg[1] = 0x00;
-        msg[2] = 0x00;
-        vc_cec_send_message(CEC_BROADCAST_ADDR, msg, 2, VC_FALSE);
-
+        vc_cec_send_MenuStatus(initiator, CEC_MENU_STATE_ACTIVATED, VC_TRUE);
         vc_cec_set_osd_name("XBMC");
         break;
 
