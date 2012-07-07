@@ -234,7 +234,7 @@ void GivePhysicalAddress(uint32_t param1)
     msg[1] = (uint8_t) ((physicalAddress >> 8) & 0xff);
     msg[2] = (uint8_t) ((physicalAddress >> 0) & 0xff);
     msg[3] = CEC_DeviceType_Playback;
-    vc_cec_send_message(0xf, msg, 4, VC_TRUE);
+    vc_cec_send_message(initiator, msg, 4, VC_TRUE);
 }
 
 void debug(const char *s, uint32_t param0,
