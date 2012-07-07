@@ -62,7 +62,7 @@ public:
 
 CECXBMCClient xbmc;
 
-void button_pressed(uint32_t param)
+void UserControlPressed(uint32_t param)
 {
 
     uint32_t operand1  = CEC_CB_OPERAND1(param);
@@ -78,7 +78,7 @@ void button_pressed(uint32_t param)
     if (xbmcKey != NULL) {
         xbmc.SendButton(xbmcKey);
     } else {
-        printf("button_pressed: operand1=0x%x has no binding\n", operand1);
+        printf("UserControlPressed: operand1=0x%x has no binding\n", operand1);
     }
 }
 
@@ -132,7 +132,7 @@ void cec_callback(void *callback_data, uint32_t param0,
 
     switch (opcode) {
     case CEC_Opcode_UserControlPressed:
-        button_pressed(param1);
+        UserControlPressed(param1);
         break;
 
     case CEC_Opcode_UserControlReleased:
