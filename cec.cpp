@@ -55,6 +55,7 @@ extern "C" {
 #endif
 
 #define CEC_VENDOR_ID_LG 0xe091
+#define CEC_VENDOR_ID_LG_QUIRK 0xffff
 
 #define SL_COMMAND_UNKNOWN_01           0x01
 #define SL_COMMAND_UNKNOWN_02           0x02
@@ -213,7 +214,8 @@ void VendorCommand_LG(const CECMessage& msg)
 
 void VendorCommand(const CECMessage& msg)
 {
-    if (myVendorId == CEC_VENDOR_ID_LG) {
+    if (myVendorId == CEC_VENDOR_ID_LG ||
+        myVendorId == CEC_VENDOR_ID_LG_QUIRK) {
         VendorCommand_LG(msg);
     } else {
         printf("VendorCommand: unhandled vendor command operand1=0x%x "
@@ -470,9 +472,10 @@ int main(int argc, char **argv)
 #endif
 
 
-    if (tvVendorId == CEC_VENDOR_ID_LG) {
+    if (tvVendorId == CEC_VENDOR_ID_LG ||
+        tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
         printf("Setting Vendor Id to LG\n");
-        myVendorId = tvVendorId;
+        myVendorId = CEC_VENDOR_ID_LG;
         vc_cec_set_vendor_id(myVendorId);
         uint8_t msg[4];
         msg[0] = CEC_Opcode_DeviceVendorID;
