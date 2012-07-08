@@ -84,6 +84,8 @@ CECXBMCClient xbmc;
 uint32_t tvVendorId;
 uint32_t myVendorId;
 
+void debug(const char*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+
 void UserControlPressed(uint32_t param)
 {
 
@@ -202,6 +204,14 @@ void VendorCommand(uint32_t param1)
     }
 }
 
+void VendorRemoteButtonDown(uint32_t param0, uint32_t param1, uint32_t param2,
+        uint32_t param3, uint32_t param4)
+{
+    char str[64];
+    snprintf(str, 63, "VendorRemoteButtonDown(vendor=0x%x: )", tvVendorId);
+    debug(str, param0, param1, param2, param3, param4);
+}
+
 void GiveDeviceVendorID(uint32_t param1) {
     uint8_t initiator = CEC_CB_INITIATOR(param1);
     uint8_t msg[4];
@@ -285,9 +295,11 @@ void cec_callback(void *callback_data, uint32_t param0,
     case CEC_Opcode_Play:                Play(param1);               break;
     case CEC_Opcode_DeckControl:         DeckControl(param1);        break;
     case CEC_Opcode_VendorCommand:       VendorCommand(param1);      break;
+    case CEC_Opcode_VendorRemoteButtonDown:
+        VendorRemoteButtonDown(param0, param1, param2, param3, param4); break;
     case CEC_Opcode_GiveDeviceVendorID:  GiveDeviceVendorID(param1); break;
     case CEC_Opcode_GiveDevicePowerStatus:
-            GiveDevicePowerStatus(param1); break;
+        GiveDevicePowerStatus(param1); break;
     default:
         debug("cec_callback: unknown event: ",
             param0, param1, param2, param3, param4);
@@ -397,6 +409,7 @@ int main(int argc, char **argv)
     vc_cec_register_command(CEC_Opcode_GiveDeviceVendorID);
     vc_cec_register_command(CEC_Opcode_VendorCommand);
     vc_cec_register_command(CEC_Opcode_GiveDevicePowerStatus);
+    vc_cec_register_command(CEC_Opcode_VendorRemoteButtonDown);
 
     physical_address = CEC_CLEAR_ADDR;
     while (physical_address == CEC_CLEAR_ADDR) {
