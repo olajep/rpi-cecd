@@ -39,7 +39,7 @@ static CECXBMCKeymap_ CECXBMCKeymap[] = {
     { CEC_User_Control_ChannelUp               , "pageplus"  },
     { CEC_User_Control_ChannelDown             , "pageminus" },
     { CEC_User_Control_PreviousChannel         , NULL        },
-    { CEC_User_Control_SoundSelect             , NULL        },
+    { CEC_User_Control_SoundSelect             , "language"  },
     { CEC_User_Control_InputSelect             , NULL        },
     { CEC_User_Control_DisplayInformation      , "info"      },
     { CEC_User_Control_Help                    , NULL        },
