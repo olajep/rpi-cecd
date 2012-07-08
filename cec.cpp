@@ -296,13 +296,13 @@ void cec_callback(void *callback_data, uint32_t param0,
 
 bool probeForTvVendorId(uint32_t& vendorId)
 {
-    uint32_t responses[4] = { 0, 0, 0, 0 };
-    unsigned const int giveUp = 256;
+    uint32_t responses[6] = { 0, 0, 0, 0, 0, 0 };
+    unsigned const int giveUp = 500;
     unsigned int i = 1;
     unsigned int n = 0;
     int res = 0;
-    printf("Probing for TV vendor ID");
-    while (n < 4 && i < giveUp) {
+    printf("Probing for TV vendor ID\n");
+    while (n < 6 && i < giveUp) {
         printf(".");
         if (!(i % 40)) {
             printf("\n");
@@ -316,17 +316,33 @@ bool probeForTvVendorId(uint32_t& vendorId)
         }
         if (response <= VC_CEC_VENDOR_ID_NODEVICE &&
             response != VC_CEC_VENDOR_ID_UNKNOWN) {
-            responses[n] = response;
-            ++n;
-            if (n==4) {
+            bool consistent = true;
+            for (unsigned int j=0; j < n; ++j) {
+                if (responses[j] != response) {
+                    consistent = false;
+                    break;
+                }
+            }
+            if (consistent) {
+                responses[n] = response;
+                ++n;
+            } else {
+                responses[0] = responses[1] = responses[2] =
+                responses[3] = responses[4] = responses[5] = 0;
+                n = 0;
+            }
+
+            if (n==6) {
                 if ( (responses[0] != responses[1] ||
                       responses[0] != responses[2] ||
-                      responses[0] != responses[3] )) {
+                      responses[0] != responses[3] ||
+                      responses[0] != responses[4] ||
+                      responses[0] != responses[5] )) {
                     n=0;
                 }
             }
         }
-        usleep(100000);
+        usleep(10000);
         ++i;
     }
     if (i == giveUp) {
