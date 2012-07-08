@@ -273,6 +273,11 @@ void SetStreamPath(const CECMessage& msg)
     }
 }
 
+void VendorCommandWithID(const CECMessage& msg)
+{
+    debug("VendorCommandWithID:", msg);
+}
+
 void debug(const char *s, const CECMessage& msg)
 {
 #ifdef DEBUG
@@ -319,6 +324,7 @@ void cec_callback(void *callback_data, uint32_t param0,
     case CEC_Opcode_GiveDeviceVendorID:      GiveDeviceVendorID(msg);     break;
     case CEC_Opcode_GiveDevicePowerStatus:   GiveDevicePowerStatus(msg);  break;
     case CEC_Opcode_SetStreamPath:           SetStreamPath(msg);          break;
+    case CEC_Opcode_VendorCommandWithID:     VendorCommandWithID(msg);    break;
     default:
         debug("cec_callback: unknown event:", msg);
     }
@@ -429,6 +435,7 @@ int main(int argc, char **argv)
     vc_cec_register_command(CEC_Opcode_GiveDevicePowerStatus);
     vc_cec_register_command(CEC_Opcode_VendorRemoteButtonDown);
     vc_cec_register_command(CEC_Opcode_SetStreamPath);
+    vc_cec_register_command(CEC_Opcode_VendorCommandWithID);
 
     physical_address = CEC_CLEAR_ADDR;
     while (physical_address == CEC_CLEAR_ADDR) {
