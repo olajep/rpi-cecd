@@ -116,16 +116,15 @@ CECXBMCClient xbmc;
 uint32_t tvVendorId;
 uint32_t myVendorId;
 
-void debug(const char*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+void debug(const char* s, const CECMessage& msg);
 
-void UserControlPressed(uint32_t param)
+void UserControlPressed(const CECMessage& msg)
 {
-
-    uint32_t operand1  = CEC_CB_OPERAND1(param);
+    uint8_t keycode = msg.operand1();
     const char *xbmcKey = NULL;
 
     for (unsigned int i=0; i < CECXBMCKeymapElements; ++i) {
-        if (CECXBMCKeymap[i].cec == operand1) {
+        if (CECXBMCKeymap[i].cec == keycode) {
             xbmcKey = CECXBMCKeymap[i].xbmc;
             break;
         }
@@ -134,61 +133,49 @@ void UserControlPressed(uint32_t param)
     if (xbmcKey != NULL) {
         xbmc.SendButton(xbmcKey);
     } else {
-        printf("UserControlPressed: operand1=0x%x has no binding\n", operand1);
+        printf("UserControlPressed: keycode=0x%x has no binding\n", keycode);
     }
 }
 
-void MenuRequest(uint32_t param)
+void MenuRequest(const CECMessage& msg)
 {
-    uint32_t operand1 = CEC_CB_OPERAND1(param);
-    if (operand1 == CEC_MENU_STATE_QUERY) {
-        uint8_t msg[2];
-        uint32_t initiator;
-        initiator = CEC_CB_INITIATOR(param);
-        msg[0] = CEC_Opcode_MenuStatus;
-        msg[1] = CEC_MENU_STATE_ACTIVATED;
-        vc_cec_send_message(initiator, msg, 2, VC_TRUE);
+    if (msg.operand1() == CEC_MENU_STATE_QUERY) {
+        vc_cec_send_MenuStatus(msg.initiator(), CEC_MENU_STATE_ACTIVATED,
+                VC_TRUE);
     } else {
-        printf("MenuRequest: operand1=0x%x unknown\n", operand1);
+        printf("MenuRequest: operand1=0x%x unknown\n", msg.operand1());
+        // TODO: send FeatureAbort?
     }
 }
 
-void Play(uint32_t param) {
-    uint32_t operand1 = CEC_CB_OPERAND1(param);
-    switch (operand1) {
-    case CEC_PLAY_FORWARD:
-        xbmc.SendButton("play");
-        break;
-    case CEC_PLAY_STILL:
-        xbmc.SendButton("pause");
-        break;
+void Play(const CECMessage& msg) {
+    switch (msg.operand1()) {
+    case CEC_PLAY_FORWARD: xbmc.SendButton("play");  break;
+    case CEC_PLAY_STILL:   xbmc.SendButton("pause"); break;
     default:
-        printf("Play: operand1=0x%x not implemented\n", operand1);
+        printf("Play: operand1=0x%x not implemented\n", msg.operand1());
     }
 }
 
-void DeckControl(uint32_t param) {
-    uint32_t operand1 = CEC_CB_OPERAND1(param);
-    if (operand1 == CEC_DECK_CTRL_STOP) {
+void DeckControl(const CECMessage& msg) {
+    if (msg.operand1() == CEC_DECK_CTRL_STOP) {
         xbmc.SendButton("stop");
     } else {
-        printf("DeckControl: operand1=0x%x not implemented\n", operand1);
+        printf("DeckControl: operand1=0x%x not implemented\n", msg.operand1());
     }
 }
 
-void VendorCommand_LG(uint32_t param)
+void VendorCommand_LG(const CECMessage& msg)
 {
-    uint32_t operand1 = CEC_CB_OPERAND1(param);
-    uint8_t initiator = CEC_CB_INITIATOR(param);
-    uint8_t msg[8];
-    switch (operand1) {
+    uint8_t response[8];
+    switch (msg.operand1()) {
     case SL_COMMAND_UNKNOWN_01:
         printf("VendorCommand_LG: SL_COMMAND_UNKNOWN_01 received\n");
         // Send 0205
-        msg[0] = CEC_Opcode_VendorCommand;
-        msg[1] = 0x02;
-        msg[2] = 0x5;
-        vc_cec_send_message(initiator, msg, 3, VC_TRUE);
+        response[0] = CEC_Opcode_VendorCommand;
+        response[1] = 0x02;
+        response[2] = 0x05;
+        vc_cec_send_message(msg.initiator(), response, 3, VC_TRUE);
         printf("VendorCommand_LG: Sent 0205\n");
         break;
 
@@ -200,19 +187,18 @@ void VendorCommand_LG(uint32_t param)
         printf("VendorCommand_LG:SL_COMMAND_CONNECT_REQUEST\n");
         // Send 0205
         // Set device mode
-        msg[0] = CEC_Opcode_VendorCommand;
-        msg[1] = SL_COMMAND_SET_DEVICE_MODE;
-        msg[2] = CEC_DeviceType_Playback;
-        vc_cec_send_message(initiator, msg, 3, VC_TRUE);
+        response[0] = CEC_Opcode_VendorCommand;
+        response[1] = SL_COMMAND_SET_DEVICE_MODE;
+        response[2] = CEC_DeviceType_Playback;
+        vc_cec_send_message(msg.initiator(), response, 3, VC_TRUE);
         // Transmit Image View On
-        msg[0] = CEC_Opcode_ImageViewOn;
-        vc_cec_send_ImageViewOn(initiator, VC_TRUE);
+        vc_cec_send_ImageViewOn(msg.initiator(), VC_TRUE);
         //Transmit Active source
         uint16_t physicalAddress;
         vc_cec_get_physical_address(&physicalAddress);
         vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
         // Transmit menu state CEC_DEVICE_TV
-        vc_cec_send_MenuStatus(initiator, CEC_MENU_STATE_ACTIVATED, VC_TRUE);
+        vc_cec_send_MenuStatus(msg.initiator(), CEC_MENU_STATE_ACTIVATED, VC_TRUE);
         vc_cec_set_osd_name("XBMC");
         break;
 
@@ -221,103 +207,85 @@ void VendorCommand_LG(uint32_t param)
         break;
 
     default:
-        printf("VendorCommand_LG: unhandled command operand1=0x%x\n", operand1);
+        printf("VendorCommand_LG: unhandled command operand1=0x%x\n", msg.operand1());
     }
 }
 
-void VendorCommand(uint32_t param1)
+void VendorCommand(const CECMessage& msg)
 {
-    uint32_t operand1 = CEC_CB_OPERAND1(param1);
     if (myVendorId == CEC_VENDOR_ID_LG) {
-        VendorCommand_LG(param1);
+        VendorCommand_LG(msg);
     } else {
         printf("VendorCommand: unhandled vendor command operand1=0x%x "
-                "for vendor=0x%x\n", operand1, tvVendorId);
+                "for vendor=0x%x\n", msg.operand1(), tvVendorId);
     }
 }
 
-void VendorRemoteButtonDown(uint32_t param0, uint32_t param1, uint32_t param2,
-        uint32_t param3, uint32_t param4)
+void VendorRemoteButtonDown(const CECMessage& msg)
 {
     char str[64];
-    snprintf(str, 63, "VendorRemoteButtonDown(vendor=0x%x: )", tvVendorId);
-    debug(str, param0, param1, param2, param3, param4);
+    snprintf(str, 63, "VendorRemoteButtonDown(vendor=0x%x):", tvVendorId);
+    debug(str, msg);
 }
 
-void GiveDeviceVendorID(uint32_t param1) {
-    uint8_t initiator = CEC_CB_INITIATOR(param1);
-    uint8_t msg[4];
-    msg[0] = CEC_Opcode_DeviceVendorID;
-    msg[1] = (uint8_t) ((myVendorId >> 16) & 0xff);
-    msg[2] = (uint8_t) ((myVendorId >> 8) & 0xff);
-    msg[3] = (uint8_t) ((myVendorId >> 0) & 0xff);
-    vc_cec_send_message(initiator, msg, 4, VC_TRUE);
+void GiveDeviceVendorID(const CECMessage& msg) {
+    uint8_t response[4];
+    response[0] = CEC_Opcode_DeviceVendorID;
+    response[1] = (uint8_t) ((myVendorId >> 16) & 0xff);
+    response[2] = (uint8_t) ((myVendorId >> 8) & 0xff);
+    response[3] = (uint8_t) ((myVendorId >> 0) & 0xff);
+    vc_cec_send_message(msg.initiator(), response, 4, VC_TRUE);
 }
 
-void GiveDevicePowerStatus(uint32_t param1)
+void GiveDevicePowerStatus(const CECMessage& msg)
 {
-    uint8_t initiator = CEC_CB_INITIATOR(param1);
     printf("cec_callback: received power status query \n");
     // Send CEC_Opcode_ReportPowerStatus
-    uint8_t msg[4];
-    msg[0] = CEC_Opcode_ReportPowerStatus;
-    msg[1] = CEC_POWER_STATUS_ON;
-    vc_cec_send_message(initiator, msg, 2, VC_TRUE);
+    uint8_t response[2];
+    response[0] = CEC_Opcode_ReportPowerStatus;
+    response[1] = CEC_POWER_STATUS_ON;
+    vc_cec_send_message(msg.initiator(), response, 2, VC_TRUE);
     printf("cec_callback: sent powerstatus on\n");
 }
 
-void SetStreamPath(uint32_t param0, uint32_t param1, uint32_t param2,
-        uint32_t param3, uint32_t param4)
+void SetStreamPath(const CECMessage& msg)
 {
+    debug("SetStreamPath:", msg);
 
-    debug("SetStreamPath: ", param0, param1, param2, param3, param4);
-    uint8_t operand1 = CEC_CB_OPERAND1(param1);
-    uint8_t operand2 = CEC_CB_OPERAND2(param1);
-    uint8_t initiator = CEC_CB_INITIATOR(param1);
     uint16_t requestedAddress;
     uint16_t physicalAddress;
+
     vc_cec_get_physical_address(&physicalAddress);
 
-    requestedAddress = operand1;
+    requestedAddress = msg.operand1();
     requestedAddress <<= 8;
-    requestedAddress += operand2;
+    requestedAddress += msg.operand2();
 
     if (physicalAddress == requestedAddress) {
         vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
-        vc_cec_send_ImageViewOn(initiator, VC_FALSE);
+        vc_cec_send_ImageViewOn(msg.initiator(), VC_FALSE);
         // According to the spec. this shouldn't be necessary
-        vc_cec_send_MenuStatus(initiator, CEC_MENU_STATE_ACTIVATED, VC_TRUE);
+        vc_cec_send_MenuStatus(msg.initiator(), CEC_MENU_STATE_ACTIVATED,
+                VC_TRUE);
         xbmc.ping();
     }
 }
 
-void debug(const char *s, uint32_t param0,
-        uint32_t param1, uint32_t param2,
-        uint32_t param3, uint32_t param4)
+void debug(const char *s, const CECMessage& msg)
 {
 #ifdef DEBUG
-    VC_CEC_NOTIFY_T reason  = (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);
-    uint8_t len       = CEC_CB_MSG_LENGTH(param0);
-    uint8_t retval    = CEC_CB_RC(param0);
-    uint8_t initiator = CEC_CB_INITIATOR(param1);
-    uint8_t follower  = CEC_CB_FOLLOWER(param1);
-    uint8_t opcode    = CEC_CB_OPCODE(param1);
-    uint8_t operand1  = CEC_CB_OPERAND1(param1);
-
-    uint8_t operand2  = CEC_CB_OPERAND2(param1);
-
     static char standard[] = "CEC Message:";
     if (s == NULL) {
         s = &standard[0];
     }
 
-    printf("%s reason=0x%04x, len=0x%02x, retval=0x%02x, initiator=0x%x, "
+    printf("%s reason=0x%04x, length=0x%02x, retVal=0x%02x, initiator=0x%x, "
         "follower=0x%x, opcode=0x%0x, operand1=0x%0x, operand2=0x%0x",
-        s, reason, len, retval, initiator, follower, opcode, operand1,
-        operand2);
-    if (len > 4) {
+        s, msg.reason(), msg.length(), msg.retVal(), msg.initiator(),
+        msg.follower(), msg.opcode(), msg.operand1(), msg.operand2());
+    if (msg.length() > 4) {
         printf(" param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x",
-        param1, param2, param3, param4);
+        msg.param1, msg.param2, msg.param3, msg.param4);
     }
     printf("\n");
 #endif
@@ -327,41 +295,30 @@ void cec_callback(void *callback_data, uint32_t param0,
         uint32_t param1, uint32_t param2,
         uint32_t param3, uint32_t param4)
 {
-    VC_CEC_NOTIFY_T reason;
-    uint32_t retval;
+    CECMessage msg(param0, param1, param2, param3, param4);
 
-    reason  = (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);
-    retval  = CEC_CB_RC(param0);
-
-    if (reason == VC_CEC_TX) {
-        if (retval) {
-            debug("cec_callback: failed transmission: ",
-                param0, param1, param2, param3, param4);
+    if (msg.reason() == VC_CEC_TX) {
+        if (msg.retVal()) {
+            debug("cec_callback: failed transmission:", msg);
         }
         return;
     }
 
-    debug("cec_callback: debug: ",
-        param0, param1, param2, param3, param4);
+    debug("cec_callback: debug:", msg);
 
-    uint32_t opcode = CEC_CB_OPCODE(param1);
-    switch (opcode) {
-    case CEC_Opcode_UserControlPressed:  UserControlPressed(param1); break;
-    case CEC_Opcode_UserControlReleased: /* NOP */                   break;
-    case CEC_Opcode_MenuRequest:         MenuRequest(param1);        break;
-    case CEC_Opcode_Play:                Play(param1);               break;
-    case CEC_Opcode_DeckControl:         DeckControl(param1);        break;
-    case CEC_Opcode_VendorCommand:       VendorCommand(param1);      break;
-    case CEC_Opcode_VendorRemoteButtonDown:
-        VendorRemoteButtonDown(param0, param1, param2, param3, param4); break;
-    case CEC_Opcode_GiveDeviceVendorID:  GiveDeviceVendorID(param1); break;
-    case CEC_Opcode_GiveDevicePowerStatus:
-        GiveDevicePowerStatus(param1); break;
-    case CEC_Opcode_SetStreamPath:
-        SetStreamPath(param0, param1, param2, param3, param4); break;
+    switch (msg.opcode()) {
+    case CEC_Opcode_UserControlPressed:      UserControlPressed(msg);     break;
+    case CEC_Opcode_UserControlReleased:     /* NOP */                    break;
+    case CEC_Opcode_MenuRequest:             MenuRequest(msg);            break;
+    case CEC_Opcode_Play:                    Play(msg);                   break;
+    case CEC_Opcode_DeckControl:             DeckControl(msg);            break;
+    case CEC_Opcode_VendorCommand:           VendorCommand(msg);          break;
+    case CEC_Opcode_VendorRemoteButtonDown:  VendorRemoteButtonDown(msg); break;
+    case CEC_Opcode_GiveDeviceVendorID:      GiveDeviceVendorID(msg);     break;
+    case CEC_Opcode_GiveDevicePowerStatus:   GiveDevicePowerStatus(msg);  break;
+    case CEC_Opcode_SetStreamPath:           SetStreamPath(msg);          break;
     default:
-        debug("cec_callback: unknown event: ",
-            param0, param1, param2, param3, param4);
+        debug("cec_callback: unknown event:", msg);
     }
 }
 
