@@ -47,6 +47,13 @@ extern "C" {
 #define VC_FALSE 0
 #endif
 
+#ifndef VC_CEC_VENDOR_ID_NODEVICE
+#define VC_CEC_VENDOR_ID_NODEVICE 0xffffff
+#endif
+#ifndef VC_CEC_VENDOR_ID_UNKNOWN
+#define VC_CEC_VENDOR_ID_UNKNOWN 0
+#endif
+
 #define CEC_VENDOR_ID_LG 0xe091
 
 #define SL_COMMAND_UNKNOWN_01           0x01
@@ -286,6 +293,53 @@ void cec_callback(void *callback_data, uint32_t param0,
             param0, param1, param2, param3, param4);
     }
 }
+
+bool probeForTvVendorId(uint32_t& vendorId)
+{
+    uint32_t responses[4] = { 0, 0, 0, 0 };
+    unsigned const int giveUp = 256;
+    unsigned int i = 1;
+    unsigned int n = 0;
+    int res = 0;
+    printf("Probing for TV vendor ID");
+    while (n < 4 && i < giveUp) {
+        printf(".");
+        if (!(i % 40)) {
+            printf("\n");
+        }
+        uint32_t response;
+        res = vc_cec_get_vendor_id(CEC_AllDevices_eTV, &response);
+        if ( res != 0 ) {
+            printf( "An error occured when trying to get TV vendor ID\n" );
+            sleep(1);
+            continue;
+        }
+        if (response <= VC_CEC_VENDOR_ID_NODEVICE &&
+            response != VC_CEC_VENDOR_ID_UNKNOWN) {
+            responses[n] = response;
+            ++n;
+            if (n==4) {
+                if ( (responses[0] != responses[1] ||
+                      responses[0] != responses[2] ||
+                      responses[0] != responses[3] )) {
+                    n=0;
+                }
+            }
+        }
+        usleep(100000);
+        ++i;
+    }
+    if (i == giveUp) {
+        printf(" failed.\n");
+        return false;
+    }
+    else {
+        printf(" done.\n");
+        vendorId = responses[0];
+        return true;
+    }
+}
+
 
 int main(int argc, char **argv)
 {
