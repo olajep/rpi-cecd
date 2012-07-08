@@ -64,6 +64,8 @@ extern "C" {
 #define SL_COMMAND_CONNECT_REQUEST      0x04
 #define SL_COMMAND_SET_DEVICE_MODE      0x05
 
+#define XBMC_KEY_ASCII 0xF100
+
 class CECXBMCClient : public CXBMCClient
 {
 public:
@@ -76,6 +78,11 @@ public:
         // decide what to do.
         static char DeviceMap[] = "R1";
         CXBMCClient::SendButton(Button, DeviceMap, Flags);
+    }
+
+    void ping()
+    {
+        CXBMCClient::SendButton(XBMC_KEY_ASCII, BTN_NO_REPEAT);
     }
 };
 
@@ -234,6 +241,31 @@ void GiveDevicePowerStatus(uint32_t param1)
     printf("cec_callback: sent powerstatus on\n");
 }
 
+void SetStreamPath(uint32_t param0, uint32_t param1, uint32_t param2,
+        uint32_t param3, uint32_t param4)
+{
+
+    debug("SetStreamPath: ", param0, param1, param2, param3, param4);
+    uint8_t operand1 = CEC_CB_OPERAND1(param1);
+    uint8_t operand2 = CEC_CB_OPERAND2(param1);
+    uint8_t initiator = CEC_CB_INITIATOR(param1);
+    uint16_t requestedAddress;
+    uint16_t physicalAddress;
+    vc_cec_get_physical_address(&physicalAddress);
+
+    requestedAddress = operand1;
+    requestedAddress <<= 8;
+    requestedAddress += operand2;
+
+    if (physicalAddress == requestedAddress) {
+        vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
+        vc_cec_send_ImageViewOn(initiator, VC_FALSE);
+        // According to the spec. this shouldn't be necessary
+        vc_cec_send_MenuStatus(initiator, CEC_MENU_STATE_ACTIVATED, VC_TRUE);
+        xbmc.ping();
+    }
+}
+
 void debug(const char *s, uint32_t param0,
         uint32_t param1, uint32_t param2,
         uint32_t param3, uint32_t param4)
@@ -300,6 +332,8 @@ void cec_callback(void *callback_data, uint32_t param0,
     case CEC_Opcode_GiveDeviceVendorID:  GiveDeviceVendorID(param1); break;
     case CEC_Opcode_GiveDevicePowerStatus:
         GiveDevicePowerStatus(param1); break;
+    case CEC_Opcode_SetStreamPath:
+        SetStreamPath(param0, param1, param2, param3, param4); break;
     default:
         debug("cec_callback: unknown event: ",
             param0, param1, param2, param3, param4);
@@ -410,6 +444,7 @@ int main(int argc, char **argv)
     vc_cec_register_command(CEC_Opcode_VendorCommand);
     vc_cec_register_command(CEC_Opcode_GiveDevicePowerStatus);
     vc_cec_register_command(CEC_Opcode_VendorRemoteButtonDown);
+    vc_cec_register_command(CEC_Opcode_SetStreamPath);
 
     physical_address = CEC_CLEAR_ADDR;
     while (physical_address == CEC_CLEAR_ADDR) {
