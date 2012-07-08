@@ -223,18 +223,29 @@ void debug(const char *s, uint32_t param0,
 {
 #ifdef DEBUG
     VC_CEC_NOTIFY_T reason  = (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);
-    uint32_t len     = CEC_CB_MSG_LENGTH(param0);
-    uint32_t retval  = CEC_CB_RC(param0);
+    uint8_t len       = CEC_CB_MSG_LENGTH(param0);
+    uint8_t retval    = CEC_CB_RC(param0);
+    uint8_t initiator = CEC_CB_INITIATOR(param1);
+    uint8_t follower  = CEC_CB_FOLLOWER(param1);
+    uint8_t opcode    = CEC_CB_OPCODE(param1);
+    uint8_t operand1  = CEC_CB_OPERAND1(param1);
 
-    static char empty = '\0';
+    uint8_t operand2  = CEC_CB_OPERAND2(param1);
+
+    static char standard[] = "CEC Message:";
     if (s == NULL) {
-        s = &empty;
+        s = &standard[0];
     }
 
-    printf("%s"
-        "reason=0x%04x, len=0x%02x, retval=0x%02x, "
-        "param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x\n",
-        s, reason, len, retval, param1, param2, param3, param4);
+    printf("%s reason=0x%04x, len=0x%02x, retval=0x%02x, initiator=0x%x, "
+        "follower=0x%x, opcode=0x%0x, operand1=0x%0x, operand2=0x%0x",
+        s, reason, len, retval, initiator, follower, opcode, operand1,
+        operand2);
+    if (len > 4) {
+        printf(" param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x",
+        param1, param2, param3, param4);
+    }
+    printf("\n");
 #endif
 }
 
