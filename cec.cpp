@@ -86,6 +86,31 @@ public:
     }
 };
 
+struct CECMessage {
+    CECMessage(uint32_t param0, uint32_t param1, uint32_t param2,
+            uint32_t param3, uint32_t param4) :
+        param0(param0), param1(param1), param2(param2), param3(param3),
+        param4(param4)
+    {}
+
+    uint32_t param0;
+    uint32_t param1;
+    uint32_t param2;
+    uint32_t param3;
+    uint32_t param4;
+
+    VC_CEC_NOTIFY_T
+            reason()    const { return (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);}
+    uint8_t length()    const { return CEC_CB_MSG_LENGTH(param0); }
+    uint8_t retVal()    const { return CEC_CB_RC(param0);         }
+
+    uint8_t initiator() const { return CEC_CB_INITIATOR(param1); }
+    uint8_t follower()  const { return CEC_CB_FOLLOWER(param1);  }
+    uint8_t opcode()    const { return CEC_CB_OPCODE(param1);    }
+    uint8_t operand1()  const { return CEC_CB_OPERAND1(param1);  }
+    uint8_t operand2()  const { return CEC_CB_OPERAND2(param1);  }
+};
+
 
 CECXBMCClient xbmc;
 uint32_t tvVendorId;
