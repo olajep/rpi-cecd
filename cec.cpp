@@ -76,7 +76,6 @@ public:
 CECXBMCClient xbmc;
 uint32_t tvVendorId;
 uint32_t myVendorId;
-uint16_t physicalAddress;
 
 void UserControlPressed(uint32_t param)
 {
@@ -168,6 +167,8 @@ void VendorCommand_LG(uint32_t param)
         msg[0] = CEC_Opcode_ImageViewOn;
         vc_cec_send_ImageViewOn(initiator, VC_TRUE);
         //Transmit Active source
+        uint16_t physicalAddress;
+        vc_cec_get_physical_address(&physicalAddress);
         vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
         // Transmit menu state CEC_DEVICE_TV
         vc_cec_send_MenuStatus(initiator, CEC_MENU_STATE_ACTIVATED, VC_TRUE);
@@ -214,18 +215,6 @@ void GiveDevicePowerStatus(uint32_t param1)
     msg[1] = CEC_POWER_STATUS_ON;
     vc_cec_send_message(initiator, msg, 2, VC_TRUE);
     printf("cec_callback: sent powerstatus on\n");
-}
-void GivePhysicalAddress(uint32_t param1)
-{
-    uint8_t initiator = CEC_CB_INITIATOR(param1);
-    printf("cec_callback: received Give Physical addr \n");
-    // Send CEC_Opcode_GivePhysicallAddress
-    uint8_t msg[4];
-    msg[0] = CEC_Opcode_ReportPhysicalAddress;
-    msg[1] = (uint8_t) ((physicalAddress >> 8) & 0xff);
-    msg[2] = (uint8_t) ((physicalAddress >> 0) & 0xff);
-    msg[3] = CEC_DeviceType_Playback;
-    vc_cec_send_message(initiator, msg, 4, VC_TRUE);
 }
 
 void debug(const char *s, uint32_t param0,
@@ -281,7 +270,6 @@ void cec_callback(void *callback_data, uint32_t param0,
     case CEC_Opcode_GiveDeviceVendorID:  GiveDeviceVendorID(param1); break;
     case CEC_Opcode_GiveDevicePowerStatus:
             GiveDevicePowerStatus(param1); break;
-    case CEC_Opcode_GivePhysicalAddress: GivePhysicalAddress(param1);break;
     default:
         debug("cec_callback: unknown event: ",
             param0, param1, param2, param3, param4);
@@ -295,6 +283,7 @@ int main(int argc, char **argv)
     VCHI_INSTANCE_T vchiq_instance;
     VCHI_CONNECTION_T *vchi_connection;
     CEC_AllDevices_T logical_address;
+    uint16_t physical_address;
 
     /* Make sure logs are written to disk */
     setlinebuf(stdout);
@@ -339,7 +328,6 @@ int main(int argc, char **argv)
     vc_cec_register_command(CEC_Opcode_GiveDeviceVendorID);
     vc_cec_register_command(CEC_Opcode_VendorCommand);
     vc_cec_register_command(CEC_Opcode_GiveDevicePowerStatus);
-    vc_cec_register_command(CEC_Opcode_GivePhysicalAddress);
 
     vc_cec_get_logical_address(&logical_address);
     printf("logical_address: 0x%x\n", logical_address);
@@ -361,10 +349,10 @@ int main(int argc, char **argv)
 
     vc_cec_set_osd_name("XBMC");
 
-    vc_cec_get_physical_address(&physicalAddress);
-    printf("physical_address: 0x%x\n", physicalAddress);
+    vc_cec_get_physical_address(&physical_address);
+    printf("physical_address: 0x%x\n", physical_address);
 
-    vc_cec_send_ActiveSource(physicalAddress, 0);
+    vc_cec_send_ActiveSource(physical_address, 0);
 
     xbmc.SendHELO("rpi-cecd", ICON_NONE);
 
