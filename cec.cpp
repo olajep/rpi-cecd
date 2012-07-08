@@ -129,7 +129,7 @@ void Play(uint32_t param) {
         xbmc.SendButton("pause");
         break;
     default:
-        printf("MenuRequest: operand1=0x%x not implemented\n", operand1);
+        printf("Play: operand1=0x%x not implemented\n", operand1);
     }
 }
 
