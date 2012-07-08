@@ -350,9 +350,13 @@ int main(int argc, char **argv)
     CEC_AllDevices_T logical_address;
     uint16_t physical_address;
 
+
     /* Make sure logs are written to disk */
     setlinebuf(stdout);
     setlinebuf(stderr);
+
+    // Do not call bcm_host_init() or vcos_init()
+    // Otherwise we'll stop receiving CEC data
 
     res = vchi_initialise(&vchiq_instance);
     if ( res != VCHIQ_SUCCESS ) {
@@ -366,27 +370,11 @@ int main(int argc, char **argv)
         return -1;
     }
 
+
+    // vc_vchi_cec_init sets vchi_connection to NULL. Thats fine
     vc_vchi_cec_init(vchiq_instance, &vchi_connection, 1);
-    if ( res != 0 ) {
-        printf( "VCHI CEC connection failed\n" );
-        return -1;
-    }
-
-
-    res = vc_cec_get_vendor_id(CEC_AllDevices_eTV, &tvVendorId);
-    if ( res != 0 ) {
-        printf( "could not get TV vendor ID\n" );
-        return -1;
-    }
-    printf("TV Vendor ID: 0x%x\n", tvVendorId);
-
 
     vc_cec_register_callback(((CECSERVICE_CALLBACK_T) cec_callback), NULL);
-
-#if 0
-    vc_cec_register_all();
-#endif
-
     vc_cec_register_command(CEC_Opcode_MenuRequest);
     vc_cec_register_command(CEC_Opcode_Play);
     vc_cec_register_command(CEC_Opcode_DeckControl);
@@ -394,8 +382,47 @@ int main(int argc, char **argv)
     vc_cec_register_command(CEC_Opcode_VendorCommand);
     vc_cec_register_command(CEC_Opcode_GiveDevicePowerStatus);
 
-    vc_cec_get_logical_address(&logical_address);
-    printf("logical_address: 0x%x\n", logical_address);
+    physical_address = CEC_CLEAR_ADDR;
+    while (physical_address == CEC_CLEAR_ADDR) {
+        res = vc_cec_get_physical_address(&physical_address);
+        if (res != 0) {
+            printf("failed to get physical address");
+            return -1;
+        }
+        if (physical_address != CEC_CLEAR_ADDR) {
+            break;
+        }
+        printf("CEC is currently disabled. Will retry in 60 seconds. "
+               "Make sure the TV is on and connected to the RPi\n");
+        sleep(60);
+    }
+    printf("Physical Address: 0x%x\n", physical_address);
+    sleep(1);
+
+    logical_address = CEC_AllDevices_eUnRegistered;
+    while (logical_address == CEC_AllDevices_eUnRegistered) {
+        vc_cec_get_logical_address(&logical_address);
+        if (logical_address != CEC_AllDevices_eUnRegistered) {
+            break;
+        }
+        printf("No logical address. Will retry in 60s"
+               "Make sure the TV is on and connected to the RPi\n");
+        vc_cec_alloc_logical_address();
+        sleep(60);
+    }
+    printf("Logical Address: 0x%x\n", logical_address);
+
+    while (!probeForTvVendorId(tvVendorId)) {
+        printf("Probing failed. Will retry in 60 seconds. "
+               "Make sure the TV is on and connected to the RPi\n");
+        sleep(60);
+    }
+    printf("TV Vendor ID: 0x%x\n", tvVendorId);
+
+#if 0
+    vc_cec_register_all();
+#endif
+
 
     if (tvVendorId == CEC_VENDOR_ID_LG) {
         printf("Setting Vendor Id to LG\n");
@@ -414,8 +441,6 @@ int main(int argc, char **argv)
 
     vc_cec_set_osd_name("XBMC");
 
-    vc_cec_get_physical_address(&physical_address);
-    printf("physical_address: 0x%x\n", physical_address);
 
     vc_cec_send_ActiveSource(physical_address, 0);
 
@@ -425,7 +450,7 @@ int main(int argc, char **argv)
         sleep(10);
     }
 
-    vchi_exit();
+    vc_vchi_cec_stop();
 
     return 0;
 }
