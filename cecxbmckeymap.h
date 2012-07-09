@@ -59,7 +59,7 @@ static CECXBMCKeymap_ CECXBMCKeymap[] = {
     { CEC_User_Control_Forward                 , "skipplus"  },
     { CEC_User_Control_Backward                , "skipminus" },
     { CEC_User_Control_Angle                   , NULL        },
-    { CEC_User_Control_Subpicture              , NULL        },
+    { CEC_User_Control_Subpicture              , "subtitle"  },
     { CEC_User_Control_VideoOnDemand           , NULL        },
     { CEC_User_Control_EPG                     , "playlist"  },
     { CEC_User_Control_TimerProgramming        , NULL        },
