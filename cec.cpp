@@ -367,16 +367,6 @@ bool probeForTvVendorId(uint32_t& vendorId)
                 responses[3] = responses[4] = responses[5] = 0;
                 n = 0;
             }
-
-            if (n==6) {
-                if ( (responses[0] != responses[1] ||
-                      responses[0] != responses[2] ||
-                      responses[0] != responses[3] ||
-                      responses[0] != responses[4] ||
-                      responses[0] != responses[5] )) {
-                    n=0;
-                }
-            }
         }
         usleep(10000);
         ++i;
