@@ -65,6 +65,9 @@ extern "C" {
 #define SL_COMMAND_CONNECT_REQUEST      0x04
 #define SL_COMMAND_SET_DEVICE_MODE      0x05
 
+
+#define CEC_VENDOR_BUTTON_SAMSUNG_BACK 0x91
+
 #define XBMC_KEY_ASCII 0xF100
 
 class CECXBMCClient : public CXBMCClient
@@ -229,8 +232,14 @@ void VendorCommand(const CECMessage& msg)
 void VendorRemoteButtonDown(const CECMessage& msg)
 {
     char str[64];
-    snprintf(str, 63, "VendorRemoteButtonDown(vendor=0x%x):", tvVendorId);
+    snprintf(str, 63, "VendorRemoteButtonDown(vendor=0x%x, operand1=0x%x):",
+            tvVendorId, msg.operand1());
     debug(str, msg);
+
+    // Temporary fix
+    if (msg.operand1() == CEC_VENDOR_BUTTON_SAMSUNG_BACK) {
+        xbmc.SendButton("back");
+    }
 }
 
 void GiveDeviceVendorID(const CECMessage& msg) {
