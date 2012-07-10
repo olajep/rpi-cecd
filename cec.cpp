@@ -369,7 +369,7 @@ bool probeForTvVendorId(uint32_t& vendorId)
             sleep(1);
             continue;
         }
-        if (response <= VC_CEC_VENDOR_ID_NODEVICE &&
+        if (response < VC_CEC_VENDOR_ID_NODEVICE &&
             response != VC_CEC_VENDOR_ID_UNKNOWN) {
             bool consistent = true;
             for (unsigned int j=0; j < n; ++j) {
