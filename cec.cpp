@@ -387,7 +387,7 @@ bool probeForTvVendorId(uint32_t& vendorId)
                 n = 0;
             }
         }
-        usleep(10000);
+        usleep(100000);
         ++i;
     }
     if (i == giveUp) {
