@@ -89,27 +89,30 @@ public:
 
 struct CECMessage {
     CECMessage(uint32_t param0, uint32_t param1, uint32_t param2,
-            uint32_t param3, uint32_t param4) :
-        param0(param0), param1(param1), param2(param2), param3(param3),
-        param4(param4)
-    {}
+            uint32_t param3, uint32_t param4)
+    {
+        reason = (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);
+        retval = CEC_CB_RC(param0);
 
-    uint32_t param0;
-    uint32_t param1;
-    uint32_t param2;
-    uint32_t param3;
-    uint32_t param4;
+        VC_CEC_MESSAGE_T tmp;
+        vc_cec_param2message(param0, param1, param2, param3, param4, &tmp);
+        length = tmp.length;
+        initiator = tmp.initiator;
+        follower = tmp.follower;
+        memcpy(&payload[0], &tmp.payload[0], sizeof(payload));
+    }
 
-    VC_CEC_NOTIFY_T
-            reason()    const { return (VC_CEC_NOTIFY_T) CEC_CB_REASON(param0);}
-    uint8_t length()    const { return CEC_CB_MSG_LENGTH(param0); }
-    uint8_t retVal()    const { return CEC_CB_RC(param0);         }
+    VC_CEC_NOTIFY_T reason;
+    uint8_t retval;
 
-    uint8_t initiator() const { return CEC_CB_INITIATOR(param1); }
-    uint8_t follower()  const { return CEC_CB_FOLLOWER(param1);  }
-    uint8_t opcode()    const { return CEC_CB_OPCODE(param1);    }
-    uint8_t operand1()  const { return CEC_CB_OPERAND1(param1);  }
-    uint8_t operand2()  const { return CEC_CB_OPERAND2(param1);  }
+    uint32_t length;
+    CEC_AllDevices_T initiator;
+    CEC_AllDevices_T follower;
+    uint8_t payload[CEC_MAX_XMIT_LENGTH+1];
+
+    CEC_OPCODE_T opcode() const { return (CEC_OPCODE_T) payload[0]; }
+    uint8_t operand1()    const { return payload[1]; }
+    uint8_t operand2()    const { return payload[2]; }
 };
 
 
@@ -141,7 +144,7 @@ void UserControlPressed(const CECMessage& msg)
 void MenuRequest(const CECMessage& msg)
 {
     if (msg.operand1() == CEC_MENU_STATE_QUERY) {
-        vc_cec_send_MenuStatus(msg.initiator(), CEC_MENU_STATE_ACTIVATED,
+        vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED,
                 VC_TRUE);
     } else {
         printf("MenuRequest: operand1=0x%x unknown\n", msg.operand1());
@@ -176,7 +179,7 @@ void VendorCommand_LG(const CECMessage& msg)
         response[0] = CEC_Opcode_VendorCommand;
         response[1] = 0x02;
         response[2] = 0x05;
-        vc_cec_send_message(msg.initiator(), response, 3, VC_TRUE);
+        vc_cec_send_message(msg.initiator, response, 3, VC_TRUE);
         printf("VendorCommand_LG: Sent 0205\n");
         break;
 
@@ -191,15 +194,15 @@ void VendorCommand_LG(const CECMessage& msg)
         response[0] = CEC_Opcode_VendorCommand;
         response[1] = SL_COMMAND_SET_DEVICE_MODE;
         response[2] = CEC_DeviceType_Playback;
-        vc_cec_send_message(msg.initiator(), response, 3, VC_TRUE);
+        vc_cec_send_message(msg.initiator, response, 3, VC_TRUE);
         // Transmit Image View On
-        vc_cec_send_ImageViewOn(msg.initiator(), VC_TRUE);
+        vc_cec_send_ImageViewOn(msg.initiator, VC_TRUE);
         //Transmit Active source
         uint16_t physicalAddress;
         vc_cec_get_physical_address(&physicalAddress);
         vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
         // Transmit menu state CEC_DEVICE_TV
-        vc_cec_send_MenuStatus(msg.initiator(), CEC_MENU_STATE_ACTIVATED, VC_TRUE);
+        vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED, VC_TRUE);
         vc_cec_set_osd_name("XBMC");
         break;
 
@@ -236,7 +239,7 @@ void GiveDeviceVendorID(const CECMessage& msg) {
     response[1] = (uint8_t) ((myVendorId >> 16) & 0xff);
     response[2] = (uint8_t) ((myVendorId >> 8) & 0xff);
     response[3] = (uint8_t) ((myVendorId >> 0) & 0xff);
-    vc_cec_send_message(msg.initiator(), response, 4, VC_TRUE);
+    vc_cec_send_message(msg.initiator, response, 4, VC_TRUE);
 }
 
 void GiveDevicePowerStatus(const CECMessage& msg)
@@ -246,7 +249,7 @@ void GiveDevicePowerStatus(const CECMessage& msg)
     uint8_t response[2];
     response[0] = CEC_Opcode_ReportPowerStatus;
     response[1] = CEC_POWER_STATUS_ON;
-    vc_cec_send_message(msg.initiator(), response, 2, VC_TRUE);
+    vc_cec_send_message(msg.initiator, response, 2, VC_TRUE);
     printf("cec_callback: sent powerstatus on\n");
 }
 
@@ -259,15 +262,14 @@ void SetStreamPath(const CECMessage& msg)
 
     vc_cec_get_physical_address(&physicalAddress);
 
-    requestedAddress = msg.operand1();
-    requestedAddress <<= 8;
-    requestedAddress += msg.operand2();
+    requestedAddress = (msg.payload[1] << 8) + msg.payload[2];
+    printf("requestedAddress: 0x%x\n", requestedAddress);
 
     if (physicalAddress == requestedAddress) {
         vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
-        vc_cec_send_ImageViewOn(msg.initiator(), VC_FALSE);
+        vc_cec_send_ImageViewOn(msg.initiator, VC_FALSE);
         // According to the spec. this shouldn't be necessary
-        vc_cec_send_MenuStatus(msg.initiator(), CEC_MENU_STATE_ACTIVATED,
+        vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED,
                 VC_TRUE);
         xbmc.ping();
     }
@@ -286,15 +288,15 @@ void debug(const char *s, const CECMessage& msg)
         s = &standard[0];
     }
 
-    printf("%s reason=0x%04x, length=0x%02x, retVal=0x%02x, initiator=0x%x, "
-        "follower=0x%x, opcode=0x%0x, operand1=0x%0x, operand2=0x%0x",
-        s, msg.reason(), msg.length(), msg.retVal(), msg.initiator(),
-        msg.follower(), msg.opcode(), msg.operand1(), msg.operand2());
-    if (msg.length() > 4) {
-        printf(" param1=0x%08x, param2=0x%08x, param3=0x%08x, param4=0x%08x",
-        msg.param1, msg.param2, msg.param3, msg.param4);
+    printf("%s reason=0x%04x, length=0x%02x, retval=0x%02x, initiator=0x%x, "
+        "follower=0x%x, opcode=0x%02x, operand1=0x%02x, operand2=0x%02x",
+        s, msg.reason, msg.length, msg.retval, msg.initiator,
+        msg.follower, msg.opcode(), msg.operand1(), msg.operand2());
+    printf(" payload=[(%x%x)", msg.initiator, msg.follower);
+    for (unsigned int i=0; i < msg.length; ++i) {
+        printf(",%02x", msg.payload[i]);
     }
-    printf("\n");
+    printf("]\n");
 #endif
 }
 
@@ -304,8 +306,8 @@ void cec_callback(void *callback_data, uint32_t param0,
 {
     CECMessage msg(param0, param1, param2, param3, param4);
 
-    if (msg.reason() == VC_CEC_TX) {
-        if (msg.retVal()) {
+    if (msg.reason == VC_CEC_TX) {
+        if (msg.retval) {
             debug("cec_callback: failed transmission:", msg);
         }
         return;
