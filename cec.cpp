@@ -98,11 +98,19 @@ struct CECMessage {
         retval = CEC_CB_RC(param0);
 
         VC_CEC_MESSAGE_T tmp;
-        vc_cec_param2message(param0, param1, param2, param3, param4, &tmp);
-        length = tmp.length;
-        initiator = tmp.initiator;
-        follower = tmp.follower;
-        memcpy(&payload[0], &tmp.payload[0], sizeof(payload));
+        int res;
+        res = vc_cec_param2message(param0, param1, param2, param3, param4, &tmp);
+        if (res || tmp.length > CEC_MAX_XMIT_LENGTH) {
+            length = 0;
+            initiator = CEC_AllDevices_eUnRegistered;
+            follower = CEC_AllDevices_eUnRegistered;
+            memset(&payload[0], 0, sizeof(payload));
+        } else {
+            length = tmp.length;
+            initiator = tmp.initiator;
+            follower = tmp.follower;
+            memcpy(&payload[0], &tmp.payload[0], sizeof(payload));
+        }
     }
 
     VC_CEC_NOTIFY_T reason;
