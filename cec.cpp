@@ -303,7 +303,7 @@ void debug(const char *s, const CECMessage& msg)
         msg.follower, msg.opcode(), msg.operand1(), msg.operand2());
     printf(" payload=[(%x%x)", msg.initiator, msg.follower);
     for (unsigned int i=0; i < msg.length; ++i) {
-        printf(",%02x", msg.payload[i]);
+        printf(":%02x", msg.payload[i]);
     }
     printf("]\n");
 #endif
@@ -407,6 +407,12 @@ int main(int argc, char **argv)
     /* Make sure logs are written to disk */
     setlinebuf(stdout);
     setlinebuf(stderr);
+
+    printf(
+            "rpi-cecd starting\n"
+            "Use http://www.cec-o-matic.com to debug the payload. Remove the\n"
+            "parantheses surrounding the first byte. (it's the header)\n"
+          );
 
     // Do not call bcm_host_init() or vcos_init()
     // Otherwise we'll stop receiving CEC data
