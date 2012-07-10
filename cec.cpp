@@ -441,17 +441,6 @@ int main(int argc, char **argv)
     // vc_vchi_cec_init sets vchi_connection to NULL. Thats fine
     vc_vchi_cec_init(vchiq_instance, &vchi_connection, 1);
 
-    vc_cec_register_callback(((CECSERVICE_CALLBACK_T) cec_callback), NULL);
-    vc_cec_register_command(CEC_Opcode_MenuRequest);
-    vc_cec_register_command(CEC_Opcode_Play);
-    vc_cec_register_command(CEC_Opcode_DeckControl);
-    vc_cec_register_command(CEC_Opcode_GiveDeviceVendorID);
-    vc_cec_register_command(CEC_Opcode_VendorCommand);
-    vc_cec_register_command(CEC_Opcode_GiveDevicePowerStatus);
-    vc_cec_register_command(CEC_Opcode_VendorRemoteButtonDown);
-    vc_cec_register_command(CEC_Opcode_SetStreamPath);
-    vc_cec_register_command(CEC_Opcode_VendorCommandWithID);
-
     physical_address = CEC_CLEAR_ADDR;
     while (physical_address == CEC_CLEAR_ADDR) {
         res = vc_cec_get_physical_address(&physical_address);
@@ -489,9 +478,21 @@ int main(int argc, char **argv)
     }
     printf("TV Vendor ID: 0x%x\n", tvVendorId);
 
+
 #if 0
+    // only use this for temporary debugging
     vc_cec_register_all();
 #endif
+    vc_cec_register_callback(((CECSERVICE_CALLBACK_T) cec_callback), NULL);
+    vc_cec_register_command(CEC_Opcode_MenuRequest);
+    vc_cec_register_command(CEC_Opcode_Play);
+    vc_cec_register_command(CEC_Opcode_DeckControl);
+    vc_cec_register_command(CEC_Opcode_GiveDeviceVendorID);
+    vc_cec_register_command(CEC_Opcode_VendorCommand);
+    vc_cec_register_command(CEC_Opcode_GiveDevicePowerStatus);
+    vc_cec_register_command(CEC_Opcode_VendorRemoteButtonDown);
+    vc_cec_register_command(CEC_Opcode_SetStreamPath);
+    vc_cec_register_command(CEC_Opcode_VendorCommandWithID);
 
 
     if (tvVendorId == CEC_VENDOR_ID_LG ||
