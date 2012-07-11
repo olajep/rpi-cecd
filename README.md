@@ -1,6 +1,7 @@
 #RPI-CECD
 
-This is a quick hack to make HDMI-CEC work with OpenElec on Raspberry Pi.
+This is a quick hack to make HDMI-CEC work with OpenElec/Raspbmc on Raspberry Pi.
+The goal is to make your TV remote work with XBMC
 
 ##Building:
 * Build OpenElec to get the toolchain and sysroot
@@ -19,5 +20,10 @@ make
 
 ##How to make it work on OpenElec:
 __NOTE:__ rpi-cecd is included in the OpenElec RPi nightly builds as of ~2012-06-08
+
+##Raspbmc
+It seems that the binary also work on raspbmc, altough I have not tested it.
+Get the lastest from:
+https://github.com/olajep/rpi-cecd/raw/binary/rpi-cecd
 
 

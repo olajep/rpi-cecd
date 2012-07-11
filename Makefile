@@ -1,8 +1,10 @@
+SYSROOT=/home/ashwin/OpenELEC.tv/OpenELEC.tv/build.OpenELEC-RPi.arm-devel/toolchain/armv6zk-openelec-linux-gnueabi/sysroot
+
 OBJS = cec.o
 BIN = rpi-cecd
 
-CXX ?= g++
-
+#CXX ?= g++
+CXX = /home/ashwin/OpenELEC.tv/OpenELEC.tv/build.OpenELEC-RPi.arm-devel/toolchain/bin/armv6zk-openelec-linux-gnueabi-g++
 CXXFLAGS ?= \
 	-I=/usr/include/interface/vcos/pthreads \
 	-I=/opt/vc/include/ \
