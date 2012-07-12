@@ -133,6 +133,9 @@ uint32_t tvVendorId;
 uint32_t myVendorId;
 volatile uint8_t myPowerState= 0xFF;
 volatile uint16_t physical_address;
+volatile  uint8_t prevcode=0xff;  
+volatile  uint8_t curcode=0xff; 
+volatile  uint8_t alarm_triggered=0xff; 
 
 //Local functions 
 void vc_cec_report_power_status(uint8_t dest, CEC_POWER_STATUS_T status);
@@ -140,6 +143,40 @@ void vc_cec_report_physical_address(uint8_t dest);
 void debug(const char* s, const CECMessage& msg);
 void LG_cec_init();
 
+
+void HandleComboKeys(int sig)
+{ 
+
+  //LG HACK to send back key
+  if(CEC_User_Control_Stop == prevcode && CEC_User_Control_Select == curcode)
+  {
+    // We will use combination of STOP and select key to simulate back operation
+    printf("UserControlPressed: combo key detected sending back\n");
+    prevcode=0xff;  
+    curcode=0xff; 
+    xbmc.SendButton("back");
+    alarm_triggered=0xff; 
+    return;
+  }
+  else if(CEC_User_Control_Stop == prevcode && CEC_User_Control_Pause == curcode)
+  { 
+    // We will use combination of STOP and pause key to simulate home operation
+    printf("UserControlPressed: combo key detected sending home\n");
+    prevcode=0xff;  
+    curcode=0xff; 
+    xbmc.SendButton("menu");
+    alarm_triggered=0xff; 
+    return;
+  }
+  else
+  {
+    prevcode=0xff;  
+    curcode=0xff; 
+    xbmc.SendButton("stop");
+    alarm_triggered=0xff; 
+  }
+   
+}
 
 void UserControlPressed(const CECMessage& msg)
 {
@@ -154,7 +191,18 @@ void UserControlPressed(const CECMessage& msg)
     }
 
     if (xbmcKey != NULL) {
-        xbmc.SendButton(xbmcKey);
+
+	 prevcode= curcode;
+	curcode = keycode;
+        if(CEC_User_Control_Stop  == curcode)
+        {
+          //set alarm handler and raise a alarm after a delay
+          signal (SIGALRM, HandleComboKeys);
+          alarm(1);
+    	  alarm_triggered=0x1; 
+        }
+        else if( alarm_triggered!= 1)
+          xbmc.SendButton(xbmcKey);
     } else {
         printf("UserControlPressed: keycode=0x%x has no binding\n", keycode);
     }
@@ -210,20 +258,19 @@ void VendorCommand_LG(const CECMessage& msg)
         response[2] = CEC_DeviceType_Rec ;
         vc_cec_send_message(msg.initiator, response, 3, VC_TRUE);
 
-	vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
-
-	// Opcode 04 : ImageViewOn
-	response[0] = CEC_Opcode_ImageViewOn ;
-	vc_cec_send_message(CEC_TV_ADDRESS, response, 1, VC_FALSE);
-
-	// Active source	
-	response[0] =CEC_Opcode_ActiveSource ;
-	response[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
-	response[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
-	vc_cec_send_message(CEC_BROADCAST_ADDR, response, 3, VC_FALSE);
-
-	vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
+//  vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
 #if 0
+  // Opcode 04 : ImageViewOn
+  response[0] = CEC_Opcode_ImageViewOn ;
+  vc_cec_send_message(CEC_TV_ADDRESS, response, 1, VC_FALSE);
+
+  // Active source  
+  response[0] =CEC_Opcode_ActiveSource ;
+  response[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
+  response[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
+  vc_cec_send_message(CEC_BROADCAST_ADDR, response, 3, VC_FALSE);
+
+  vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
         vc_cec_set_osd_name("XBMC");
 #endif
         break;
@@ -335,10 +382,10 @@ void debug(const char *s, const CECMessage& msg)
 
 void vc_cec_send_deck_status(uint8_t dest, uint8_t status)
 {
-	uint8_t msg[4];
-	msg[0] = CEC_Opcode_DeckStatus;
-	msg[1] = status;
-	vc_cec_send_message( dest, msg, 2, VC_TRUE);
+  uint8_t msg[4];
+  msg[0] = CEC_Opcode_DeckStatus;
+  msg[1] = status;
+  vc_cec_send_message( dest, msg, 2, VC_TRUE);
 }
 
 void vc_cec_report_physical_address(uint8_t dest)
@@ -353,10 +400,10 @@ void vc_cec_report_physical_address(uint8_t dest)
 
 void vc_cec_report_power_status(uint8_t dest, CEC_POWER_STATUS_T status)
 {
-	uint8_t msg[4];
-	msg[0] = CEC_Opcode_ReportPowerStatus;
-	msg[1] = status;
-	vc_cec_send_message( dest, msg, 2, VC_FALSE);
+  uint8_t msg[4];
+  msg[0] = CEC_Opcode_ReportPowerStatus;
+  msg[1] = status;
+  vc_cec_send_message( dest, msg, 2, VC_FALSE);
 }
 
 void LG_cec_init()
@@ -369,7 +416,7 @@ void LG_cec_init()
     myVendorId = CEC_VENDOR_ID_LG;
     vc_cec_set_vendor_id(myVendorId);
     
-	msg[0] = CEC_Opcode_DeviceVendorID;
+  msg[0] = CEC_Opcode_DeviceVendorID;
     msg[1] = (uint8_t) ((myVendorId) >> 16 & 0xff);
     msg[2] = (uint8_t) ((myVendorId) >> 8 & 0xff);
     msg[3] = (uint8_t) ((myVendorId) >> 0 & 0xff);
@@ -388,7 +435,7 @@ void LG_cec_init()
     msg[0] = CEC_Opcode_ImageViewOn ;
     vc_cec_send_message(CEC_TV_ADDRESS, msg, 1, VC_FALSE);
 
-    // Active source	
+    // Active source  
     msg[0] =CEC_Opcode_ActiveSource ;
     msg[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
     msg[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
@@ -411,10 +458,10 @@ void cec_callback(void *callback_data, uint32_t param0,
     debug("cec_callback: debug:", msg);
 
     //Actually if we have not indicated we are powered on then it should be safe
-    //to not reply to any message till then	
+    //to not reply to any message till then 
     if(myPowerState != CEC_POWER_STATUS_ON)
     {
-	return;
+  return;
     }
 
     switch (msg.opcode()) {
@@ -432,8 +479,8 @@ void cec_callback(void *callback_data, uint32_t param0,
     case CEC_Opcode_VendorCommand:           VendorCommand(msg);          break;
 
     case CEC_Opcode_GiveDeckStatus:         
-	//Status code is invalid as per CEC standard but seems to be required for LG
-	 vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);break;
+  //Status code is invalid as per CEC standard but seems to be required for LG
+   vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);break;
     default:
         debug("cec_callback: unknown event:", msg);
     }
@@ -569,7 +616,7 @@ int main(int argc, char **argv)
     printf("TV Vendor ID: 0x%x\n", tvVendorId);
 
 
-#if 0
+#if 1
     // only use this for temporary debugging
     vc_cec_register_all();
 #endif
@@ -587,8 +634,8 @@ int main(int argc, char **argv)
 
     if (tvVendorId == CEC_VENDOR_ID_LG ||
         tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
-			//Do LG specific intialization
-			LG_cec_init();
+      //Do LG specific intialization
+      LG_cec_init();
 
         } else {
         myVendorId = CEC_VENDOR_ID_BROADCOM;
