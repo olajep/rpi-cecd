@@ -211,6 +211,18 @@ void VendorCommand_LG(const CECMessage& msg)
         vc_cec_send_message(msg.initiator, response, 3, VC_TRUE);
 
 	vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
+
+	// Opcode 04 : ImageViewOn
+	response[0] = CEC_Opcode_ImageViewOn ;
+	vc_cec_send_message(CEC_TV_ADDRESS, response, 1, VC_FALSE);
+
+	// Active source	
+	response[0] =CEC_Opcode_ActiveSource ;
+	response[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
+	response[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
+	vc_cec_send_message(CEC_BROADCAST_ADDR, response, 3, VC_FALSE);
+
+	vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
 #if 0
         vc_cec_set_osd_name("XBMC");
 #endif
@@ -351,7 +363,7 @@ void LG_cec_init()
 {
     uint8_t msg[4];
 
-	vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON_PENDING); 
+    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON_PENDING); 
 
     printf("Setting Vendor Id to LG\n");
     myVendorId = CEC_VENDOR_ID_LG;
