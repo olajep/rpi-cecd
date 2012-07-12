@@ -131,14 +131,14 @@ struct CECMessage {
 CECXBMCClient xbmc;
 uint32_t tvVendorId;
 uint32_t myVendorId;
-volatile uint8_t myPowerState= 0xFF;
-volatile uint16_t physical_address;
+volatile uint8_t myPowerState = 0xFF;
+volatile uint16_t physicalAddress;
 
-//Local functions 
+//Local functions
 void vc_cec_report_power_status(uint8_t dest, CEC_POWER_STATUS_T status);
-void vc_cec_report_physical_address(uint8_t dest);
+void vc_cec_report_physicalAddress(uint8_t dest);
 void debug(const char* s, const CECMessage& msg);
-void LG_cec_init();
+void LgCecInit();
 
 
 void UserControlPressed(const CECMessage& msg)
@@ -210,24 +210,24 @@ void VendorCommand_LG(const CECMessage& msg)
         response[2] = CEC_DeviceType_Rec ;
         vc_cec_send_message(msg.initiator, response, 3, VC_TRUE);
 
-	vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
+        vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON);
 
-	// Opcode 04 : ImageViewOn
-	response[0] = CEC_Opcode_ImageViewOn ;
-	vc_cec_send_message(CEC_TV_ADDRESS, response, 1, VC_FALSE);
+        // Opcode 04 : ImageViewOn
+        response[0] = CEC_Opcode_ImageViewOn ;
+        vc_cec_send_message(CEC_TV_ADDRESS, response, 1, VC_FALSE);
 
-	// Active source	
-	response[0] =CEC_Opcode_ActiveSource ;
-	response[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
-	response[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
-	vc_cec_send_message(CEC_BROADCAST_ADDR, response, 3, VC_FALSE);
+        // Active source
+        response[0] =CEC_Opcode_ActiveSource ;
+        response[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
+        response[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
+        vc_cec_send_message(CEC_BROADCAST_ADDR, response, 3, VC_FALSE);
 
-	vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
+        vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON);
 #if 0
         vc_cec_set_osd_name("XBMC");
 #endif
         break;
-  
+
     case SL_COMMAND_POWER_ON:
         printf("VendorCommand_LG: TODO HandleVendorCommandPowerOn(command)\n");
         break;
@@ -335,41 +335,41 @@ void debug(const char *s, const CECMessage& msg)
 
 void vc_cec_send_deck_status(uint8_t dest, uint8_t status)
 {
-	uint8_t msg[4];
-	msg[0] = CEC_Opcode_DeckStatus;
-	msg[1] = status;
-	vc_cec_send_message( dest, msg, 2, VC_TRUE);
+    uint8_t msg[4];
+    msg[0] = CEC_Opcode_DeckStatus;
+    msg[1] = status;
+    vc_cec_send_message( dest, msg, 2, VC_TRUE);
 }
 
-void vc_cec_report_physical_address(uint8_t dest)
+void vc_cec_report_physicalAddress(uint8_t dest)
 {
     uint8_t msg[4];
     msg[0] = CEC_Opcode_ReportPhysicalAddress;
-    msg[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
-    msg[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
+    msg[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
+    msg[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
     msg[3] = CEC_DeviceType_Rec;
     vc_cec_send_message(dest, msg, 4, VC_TRUE);
 }
 
 void vc_cec_report_power_status(uint8_t dest, CEC_POWER_STATUS_T status)
 {
-	uint8_t msg[4];
-	msg[0] = CEC_Opcode_ReportPowerStatus;
-	msg[1] = status;
-	vc_cec_send_message( dest, msg, 2, VC_FALSE);
+    uint8_t msg[4];
+    msg[0] = CEC_Opcode_ReportPowerStatus;
+    msg[1] = status;
+    vc_cec_send_message( dest, msg, 2, VC_FALSE);
 }
 
-void LG_cec_init()
+void LgCecInit()
 {
     uint8_t msg[4];
 
-    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON_PENDING); 
+    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON_PENDING);
 
     printf("Setting Vendor Id to LG\n");
     myVendorId = CEC_VENDOR_ID_LG;
     vc_cec_set_vendor_id(myVendorId);
-    
-	msg[0] = CEC_Opcode_DeviceVendorID;
+
+    msg[0] = CEC_Opcode_DeviceVendorID;
     msg[1] = (uint8_t) ((myVendorId) >> 16 & 0xff);
     msg[2] = (uint8_t) ((myVendorId) >> 8 & 0xff);
     msg[3] = (uint8_t) ((myVendorId) >> 0 & 0xff);
@@ -377,21 +377,21 @@ void LG_cec_init()
 
     // Report Physical Address
     msg[0] = CEC_Opcode_ReportPhysicalAddress;
-    msg[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
-    msg[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
+    msg[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
+    msg[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
     msg[3] = CEC_DeviceType_Rec;
     vc_cec_send_message(CEC_BROADCAST_ADDR, msg, 4, VC_FALSE);
 
-    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
+    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON);
 
     // Opcode 04 : ImageViewOn
     msg[0] = CEC_Opcode_ImageViewOn ;
     vc_cec_send_message(CEC_TV_ADDRESS, msg, 1, VC_FALSE);
 
-    // Active source	
+    // Active source
     msg[0] =CEC_Opcode_ActiveSource ;
-    msg[1] = (uint8_t) ((physical_address) >> 8 & 0xff);
-    msg[2] = (uint8_t) ((physical_address) >> 0 & 0xff);
+    msg[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
+    msg[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
     vc_cec_send_message(CEC_BROADCAST_ADDR, msg, 3, VC_FALSE);
 }
 
@@ -411,10 +411,10 @@ void cec_callback(void *callback_data, uint32_t param0,
     debug("cec_callback: debug:", msg);
 
     //Actually if we have not indicated we are powered on then it should be safe
-    //to not reply to any message till then	
+    //to not reply to any message till then
     if(myPowerState != CEC_POWER_STATUS_ON)
     {
-	return;
+        return;
     }
 
     switch (msg.opcode()) {
@@ -428,12 +428,12 @@ void cec_callback(void *callback_data, uint32_t param0,
     case CEC_Opcode_GiveDevicePowerStatus:   GiveDevicePowerStatus(msg);  break;
     case CEC_Opcode_SetStreamPath:           SetStreamPath(msg);          break;
     case CEC_Opcode_VendorCommandWithID:     VendorCommandWithID(msg);    break;
-    case CEC_Opcode_GivePhysicalAddress:     vc_cec_report_physical_address(msg.initiator); break;
+    case CEC_Opcode_GivePhysicalAddress:     vc_cec_report_physicalAddress(msg.initiator); break;
     case CEC_Opcode_VendorCommand:           VendorCommand(msg);          break;
 
-    case CEC_Opcode_GiveDeckStatus:         
-	//Status code is invalid as per CEC standard but seems to be required for LG
-	 vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);break;
+    case CEC_Opcode_GiveDeckStatus:
+    //Status code is invalid as per CEC standard but seems to be required for LG
+        vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);break;
     default:
         debug("cec_callback: unknown event:", msg);
     }
@@ -531,21 +531,21 @@ int main(int argc, char **argv)
     // vc_vchi_cec_init sets vchi_connection to NULL. Thats fine
     vc_vchi_cec_init(vchiq_instance, &vchi_connection, 1);
 
-    physical_address = CEC_CLEAR_ADDR;
-    while (physical_address == CEC_CLEAR_ADDR) {
-        res = vc_cec_get_physical_address((uint16_t*)&physical_address);
+    physicalAddress = CEC_CLEAR_ADDR;
+    while (physicalAddress == CEC_CLEAR_ADDR) {
+        res = vc_cec_get_physical_address((uint16_t*)&physicalAddress);
         if (res != 0) {
             printf("failed to get physical address");
             return -1;
         }
-        if (physical_address != CEC_CLEAR_ADDR) {
+        if (physicalAddress != CEC_CLEAR_ADDR) {
             break;
         }
         printf("CEC is currently disabled. Will retry in 60 seconds. "
                "Make sure the TV is on and connected to the RPi\n");
         sleep(60);
     }
-    printf("Physical Address: 0x%x\n", physical_address);
+    printf("Physical Address: 0x%x\n", physicalAddress);
     sleep(1);
 
     logical_address = CEC_AllDevices_eUnRegistered;
@@ -587,17 +587,17 @@ int main(int argc, char **argv)
 
     if (tvVendorId == CEC_VENDOR_ID_LG ||
         tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
-			//Do LG specific intialization
-			LG_cec_init();
+            //Do LG specific intialization
+            LgCecInit();
 
         } else {
         myVendorId = CEC_VENDOR_ID_BROADCOM;
         vc_cec_set_vendor_id(myVendorId);
     }
 
-    vc_cec_send_ActiveSource(physical_address, 0);
+    vc_cec_send_ActiveSource(physicalAddress, 0);
 
-    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON); 
+    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON);
     myPowerState = CEC_POWER_STATUS_ON;
 
     vc_cec_set_osd_name("XBMC");
