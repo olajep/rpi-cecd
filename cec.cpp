@@ -193,19 +193,22 @@ void UserControlPressed(const CECMessage& msg)
     }
 
     if (xbmcKey != NULL) {
-        
-        //LG Hack to support back and menu keys
-        prevcode= curcode;
-        curcode = keycode;
-        if(CEC_User_Control_Stop == curcode)
-        {
-            //set alarm handler and raise a alarm after a delay
-            signal(SIGALRM, HandleComboKeys);
-            AlarmFunctionSet = 0x1; 
-            alarm(1);
-        }
-        else if(AlarmFunctionSet != 1)    // End LG Hack    
+        if (tvVendorId == CEC_VENDOR_ID_LG) {
+            //LG Hack to support back and menu keys
+            prevcode= curcode;
+            curcode = keycode;
+            if(CEC_User_Control_Stop == curcode)
+            {
+                //set alarm handler and raise a alarm after a delay
+                signal(SIGALRM, HandleComboKeys);
+                AlarmFunctionSet = 0x1; 
+                alarm(1);
+            }
+            else if(AlarmFunctionSet != 1)    // End LG Hack    
+                xbmc.SendButton(xbmcKey);
+        } else {
             xbmc.SendButton(xbmcKey);
+        }
     } else {
         printf("UserControlPressed: keycode=0x%x has no binding\n", keycode);
     }
