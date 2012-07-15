@@ -438,7 +438,11 @@ void cec_callback(void *callback_data, uint32_t param0,
 
     case CEC_Opcode_GiveDeckStatus:
     //Status code is invalid as per CEC standard but seems to be required for LG
-        vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);break;
+        if (tvVendorId == CEC_VENDOR_ID_LG) {
+            vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);
+        } else {
+            vc_cec_send_deck_status(CEC_TV_ADDRESS,CEC_DECK_INFO_PLAY);
+        }
     default:
         debug("cec_callback: unknown event:", msg);
     }
