@@ -347,7 +347,12 @@ void vc_cec_report_physicalAddress(uint8_t dest)
     msg[0] = CEC_Opcode_ReportPhysicalAddress;
     msg[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
     msg[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
-    msg[3] = CEC_DeviceType_Rec;
+    if (myVendorId == CEC_VENDOR_ID_LG) {
+        msg[3] = CEC_DeviceType_Rec;
+    }
+    else {
+        msg[3] = CEC_DeviceType_Tuner;
+    }
     vc_cec_send_message(dest, msg, 4, VC_TRUE);
 }
 
