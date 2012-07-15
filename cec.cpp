@@ -298,14 +298,11 @@ void SetStreamPath(const CECMessage& msg)
     requestedAddress = (msg.payload[1] << 8) + msg.payload[2];
     printf("requestedAddress: 0x%x\n", requestedAddress);
 
-    if (physicalAddress == requestedAddress) {
-        vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
-        vc_cec_send_ImageViewOn(msg.initiator, VC_FALSE);
-        // According to the spec. this shouldn't be necessary
-        vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED,
-                VC_TRUE);
-        xbmc.ping();
-    }
+    vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
+    // According to the spec. this shouldn't be necessary
+    vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED,
+            VC_TRUE);
+    xbmc.ping();
 }
 
 void VendorCommandWithID(const CECMessage& msg)
