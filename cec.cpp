@@ -652,8 +652,6 @@ int main(int argc, char **argv)
         vc_cec_set_vendor_id(myVendorId);
     }
 
-    vc_cec_send_ActiveSource(physicalAddress, 0);
-
     vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON);
     myPowerState = CEC_POWER_STATUS_ON;
 
