@@ -193,19 +193,22 @@ void UserControlPressed(const CECMessage& msg)
     }
 
     if (xbmcKey != NULL) {
-        
-        //LG Hack to support back and menu keys
-        prevcode= curcode;
-        curcode = keycode;
-        if(CEC_User_Control_Stop == curcode)
-        {
-            //set alarm handler and raise a alarm after a delay
-            signal(SIGALRM, HandleComboKeys);
-            AlarmFunctionSet = 0x1; 
-            alarm(1);
-        }
-        else if(AlarmFunctionSet != 1)    // End LG Hack    
+        if (tvVendorId == CEC_VENDOR_ID_LG || tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+            //LG Hack to support back and menu keys
+            prevcode= curcode;
+            curcode = keycode;
+            if(CEC_User_Control_Stop == curcode)
+            {
+                //set alarm handler and raise a alarm after a delay
+                signal(SIGALRM, HandleComboKeys);
+                AlarmFunctionSet = 0x1; 
+                alarm(1);
+            }
+            else if(AlarmFunctionSet != 1)    // End LG Hack    
+                xbmc.SendButton(xbmcKey);
+        } else {
             xbmc.SendButton(xbmcKey);
+        }
     } else {
         printf("UserControlPressed: keycode=0x%x has no binding\n", keycode);
     }
@@ -344,14 +347,11 @@ void SetStreamPath(const CECMessage& msg)
     requestedAddress = (msg.payload[1] << 8) + msg.payload[2];
     printf("requestedAddress: 0x%x\n", requestedAddress);
 
-    if (physicalAddress == requestedAddress) {
-        vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
-        vc_cec_send_ImageViewOn(msg.initiator, VC_FALSE);
-        // According to the spec. this shouldn't be necessary
-        vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED,
-                VC_TRUE);
-        xbmc.ping();
-    }
+    vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
+    // According to the spec. this shouldn't be necessary
+    vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED,
+            VC_TRUE);
+    xbmc.ping();
 }
 
 void VendorCommandWithID(const CECMessage& msg)
@@ -393,7 +393,12 @@ void vc_cec_report_physicalAddress(uint8_t dest)
     msg[0] = CEC_Opcode_ReportPhysicalAddress;
     msg[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
     msg[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
-    msg[3] = CEC_DeviceType_Rec;
+    if (myVendorId == CEC_VENDOR_ID_LG || myVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+        msg[3] = CEC_DeviceType_Rec;
+    }
+    else {
+        msg[3] = CEC_DeviceType_Tuner;
+    }
     vc_cec_send_message(dest, msg, 4, VC_TRUE);
 }
 
@@ -479,7 +484,12 @@ void cec_callback(void *callback_data, uint32_t param0,
 
     case CEC_Opcode_GiveDeckStatus:
     //Status code is invalid as per CEC standard but seems to be required for LG
-        vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);break;
+        if (tvVendorId == CEC_VENDOR_ID_LG || tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+            vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);
+        } else {
+            vc_cec_send_deck_status(CEC_TV_ADDRESS,CEC_DECK_INFO_PLAY);
+        }
+        break;
     default:
         debug("cec_callback: unknown event:", msg);
     }
@@ -643,8 +653,6 @@ int main(int argc, char **argv)
         vc_cec_set_vendor_id(myVendorId);
     }
 
-    vc_cec_send_ActiveSource(physicalAddress, 0);
-
     vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON);
     myPowerState = CEC_POWER_STATUS_ON;
 
@@ -659,6 +667,5 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
 
 
