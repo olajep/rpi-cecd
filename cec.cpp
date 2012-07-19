@@ -193,7 +193,7 @@ void UserControlPressed(const CECMessage& msg)
     }
 
     if (xbmcKey != NULL) {
-        if (tvVendorId == CEC_VENDOR_ID_LG) {
+        if (tvVendorId == CEC_VENDOR_ID_LG || tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
             //LG Hack to support back and menu keys
             prevcode= curcode;
             curcode = keycode;
@@ -393,7 +393,7 @@ void vc_cec_report_physicalAddress(uint8_t dest)
     msg[0] = CEC_Opcode_ReportPhysicalAddress;
     msg[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
     msg[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
-    if (myVendorId == CEC_VENDOR_ID_LG) {
+    if (myVendorId == CEC_VENDOR_ID_LG || myVendorId == CEC_VENDOR_ID_LG_QUIRK) {
         msg[3] = CEC_DeviceType_Rec;
     }
     else {
@@ -484,11 +484,12 @@ void cec_callback(void *callback_data, uint32_t param0,
 
     case CEC_Opcode_GiveDeckStatus:
     //Status code is invalid as per CEC standard but seems to be required for LG
-        if (tvVendorId == CEC_VENDOR_ID_LG) {
+        if (tvVendorId == CEC_VENDOR_ID_LG || tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
             vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);
         } else {
             vc_cec_send_deck_status(CEC_TV_ADDRESS,CEC_DECK_INFO_PLAY);
         }
+        break;
     default:
         debug("cec_callback: unknown event:", msg);
     }
@@ -666,6 +667,5 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
 
 
