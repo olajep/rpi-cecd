@@ -136,9 +136,9 @@ volatile CEC_POWER_STATUS_T myPowerState = CEC_POWER_STATUS_ON_PENDING;
 volatile uint16_t physicalAddress;
 
 //Needed by HandleComboKeys
-volatile  uint8_t prevcode = 0xFF;  
-volatile  uint8_t curcode = 0xFF; 
-volatile  uint8_t AlarmFunctionSet = 0xFF; 
+volatile  uint8_t prevcode = 0xFF;
+volatile  uint8_t curcode = 0xFF;
+volatile  uint8_t AlarmFunctionSet = 0xFF;
 
 //Local functions
 void vc_cec_report_power_status(uint8_t dest, CEC_POWER_STATUS_T status);
@@ -147,35 +147,34 @@ void debug(const char* s, const CECMessage& msg);
 void LgCecInit();
 
 void HandleComboKeys(int sig)
-{ 
-
+{
     //LG HACK to send back key
     if(CEC_User_Control_Stop == prevcode && CEC_User_Control_Select == curcode)
     {
         // We will use combination of STOP and select key to simulate back operation
         printf("UserControlPressed: combo key detected sending back\n");
-        prevcode=0xff;  
-        curcode=0xff; 
+        prevcode=0xff;
+        curcode=0xff;
         xbmc.SendButton("back");
-        AlarmFunctionSet=0xff; 
+        AlarmFunctionSet=0xff;
         return;
     }
     else if(CEC_User_Control_Stop == prevcode && CEC_User_Control_Pause == curcode)
-    { 
+    {
         // We will use combination of STOP and pause key to simulate home operation
         printf("UserControlPressed: combo key detected sending home\n");
-        prevcode=0xff;  
-        curcode=0xff; 
+        prevcode=0xff;
+        curcode=0xff;
         xbmc.SendButton("menu");
-        AlarmFunctionSet=0xff; 
+        AlarmFunctionSet=0xff;
         return;
     }
     else
     {
-        prevcode=0xff;  
-        curcode=0xff; 
+        prevcode=0xff;
+        curcode=0xff;
         xbmc.SendButton("stop");
-        AlarmFunctionSet=0xff; 
+        AlarmFunctionSet=0xff;
     }
 
 }
@@ -202,10 +201,10 @@ void UserControlPressed(const CECMessage& msg)
             {
                 //set alarm handler and raise a alarm after a delay
                 signal(SIGALRM, HandleComboKeys);
-                AlarmFunctionSet = 0x1; 
+                AlarmFunctionSet = 0x1;
                 alarm(1);
             }
-            else if(AlarmFunctionSet != 1)    // End LG Hack    
+            else if(AlarmFunctionSet != 1)    // End LG Hack
                 xbmc.SendButton(xbmcKey);
         } else {
             xbmc.SendButton(xbmcKey);
@@ -264,7 +263,7 @@ void VendorCommand_LG(const CECMessage& msg)
         response[1] = SL_COMMAND_SET_DEVICE_MODE;
         response[2] = CEC_DeviceType_Rec ;
         vc_cec_send_message(msg.initiator, response, 3, VC_TRUE);
- 
+
         // Opcode 04 : ImageViewOn
         response[0] = CEC_Opcode_ImageViewOn ;
         vc_cec_send_message(CEC_TV_ADDRESS, response, 1, VC_FALSE);
@@ -382,7 +381,7 @@ void DeviceVendorID(const CECMessage& msg) {
     }
 
     myPowerState = CEC_POWER_STATUS_ON;
-    vc_cec_report_power_status(CEC_TV_ADDRESS,myPowerState);
+    vc_cec_report_power_status(CEC_TV_ADDRESS, myPowerState);
 
     vc_cec_set_osd_name("XBMC");
 }
