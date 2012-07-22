@@ -129,9 +129,10 @@ struct CECMessage {
 
 
 CECXBMCClient xbmc;
-uint32_t tvVendorId;
-uint32_t myVendorId;
-volatile uint8_t myPowerState = 0xFF;
+volatile uint32_t tvVendorId = VC_CEC_VENDOR_ID_UNKNOWN;
+volatile uint32_t myVendorId = CEC_VENDOR_ID_BROADCOM;
+
+volatile CEC_POWER_STATUS_T myPowerState = CEC_POWER_STATUS_ON_PENDING;
 volatile uint16_t physicalAddress;
 
 //Needed by HandleComboKeys
@@ -330,7 +331,7 @@ void GiveDevicePowerStatus(const CECMessage& msg)
     // Send CEC_Opcode_ReportPowerStatus
     uint8_t response[2];
     response[0] = CEC_Opcode_ReportPowerStatus;
-    response[1] = CEC_POWER_STATUS_ON;
+    response[1] = myPowerState;
     vc_cec_send_message(msg.initiator, response, 2, VC_TRUE);
     printf("cec_callback: sent powerstatus on\n");
 }
@@ -357,6 +358,33 @@ void SetStreamPath(const CECMessage& msg)
 void VendorCommandWithID(const CECMessage& msg)
 {
     debug("VendorCommandWithID:", msg);
+}
+
+void DeviceVendorID(const CECMessage& msg) {
+    debug("DeviceVendorID:", msg);
+    if (msg.initiator != CEC_AllDevices_eTV) {
+        return;
+    }
+
+    uint32_t vendor = (msg.payload[1] << 16) + (msg.payload[2] << 8) + (msg.payload[3] << 0);
+    tvVendorId = vendor;
+    printf("TV Vendor: 0x%06x\n", tvVendorId);
+    if (tvVendorId == CEC_VENDOR_ID_LG ||
+        tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+            //Do LG specific intialization
+            LgCecInit();
+            // only use this for temporary debugging
+            vc_cec_register_all();
+
+        } else {
+        myVendorId = CEC_VENDOR_ID_BROADCOM;
+        vc_cec_set_vendor_id(myVendorId);
+    }
+
+    myPowerState = CEC_POWER_STATUS_ON;
+    vc_cec_report_power_status(CEC_TV_ADDRESS,myPowerState);
+
+    vc_cec_set_osd_name("XBMC");
 }
 
 void debug(const char *s, const CECMessage& msg)
@@ -461,13 +489,6 @@ void cec_callback(void *callback_data, uint32_t param0,
 
     debug("cec_callback: debug:", msg);
 
-    //Actually if we have not indicated we are powered on then it should be safe
-    //to not reply to any message till then
-    if(myPowerState != CEC_POWER_STATUS_ON)
-    {
-        return;
-    }
-
     switch (msg.opcode()) {
     case CEC_Opcode_UserControlPressed:      UserControlPressed(msg);     break;
     case CEC_Opcode_UserControlReleased:     /* NOP */                    break;
@@ -481,6 +502,7 @@ void cec_callback(void *callback_data, uint32_t param0,
     case CEC_Opcode_VendorCommandWithID:     VendorCommandWithID(msg);    break;
     case CEC_Opcode_GivePhysicalAddress:     vc_cec_report_physicalAddress(msg.initiator); break;
     case CEC_Opcode_VendorCommand:           VendorCommand(msg);          break;
+    case CEC_Opcode_DeviceVendorID:          DeviceVendorID(msg);         break;
 
     case CEC_Opcode_GiveDeckStatus:
     //Status code is invalid as per CEC standard but seems to be required for LG
@@ -495,59 +517,6 @@ void cec_callback(void *callback_data, uint32_t param0,
     }
 
 }
-
-bool probeForTvVendorId(uint32_t& vendorId)
-{
-    uint32_t responses[6] = { 0, 0, 0, 0, 0, 0 };
-    unsigned const int giveUp = 500;
-    unsigned int i = 1;
-    unsigned int n = 0;
-    int res = 0;
-    printf("Probing for TV vendor ID\n");
-    while (n < 6 && i < giveUp) {
-        printf(".");
-        if (!(i % 40)) {
-            printf("\n");
-        }
-        uint32_t response;
-        res = vc_cec_get_vendor_id(CEC_AllDevices_eTV, &response);
-        if ( res != 0 ) {
-            printf( "An error occured when trying to get TV vendor ID\n" );
-            sleep(1);
-            continue;
-        }
-        if (response < VC_CEC_VENDOR_ID_NODEVICE &&
-            response != VC_CEC_VENDOR_ID_UNKNOWN) {
-            bool consistent = true;
-            for (unsigned int j=0; j < n; ++j) {
-                if (responses[j] != response) {
-                    consistent = false;
-                    break;
-                }
-            }
-            if (consistent) {
-                responses[n] = response;
-                ++n;
-            } else {
-                responses[0] = responses[1] = responses[2] =
-                responses[3] = responses[4] = responses[5] = 0;
-                n = 0;
-            }
-        }
-        usleep(100000);
-        ++i;
-    }
-    if (i == giveUp) {
-        printf(" failed.\n");
-        return false;
-    }
-    else {
-        printf(" done.\n");
-        vendorId = responses[0];
-        return true;
-    }
-}
-
 
 int main(int argc, char **argv)
 {
@@ -617,12 +586,6 @@ int main(int argc, char **argv)
     }
     printf("Logical Address: 0x%x\n", logical_address);
 
-    while (!probeForTvVendorId(tvVendorId)) {
-        printf("Probing failed. Will retry in 60 seconds. "
-               "Make sure the TV is on and connected to the RPi\n");
-        sleep(60);
-    }
-    printf("TV Vendor ID: 0x%x\n", tvVendorId);
 
 
 #if 0
@@ -639,27 +602,18 @@ int main(int argc, char **argv)
     vc_cec_register_command(CEC_Opcode_VendorRemoteButtonDown);
     vc_cec_register_command(CEC_Opcode_SetStreamPath);
     vc_cec_register_command(CEC_Opcode_VendorCommandWithID);
+    vc_cec_register_command(CEC_Opcode_DeviceVendorID);
 
-
-    if (tvVendorId == CEC_VENDOR_ID_LG ||
-        tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
-            //Do LG specific intialization
-            LgCecInit();
-            // only use this for temporary debugging
-            vc_cec_register_all();
-
-        } else {
-        myVendorId = CEC_VENDOR_ID_BROADCOM;
-        vc_cec_set_vendor_id(myVendorId);
-    }
-
-    vc_cec_report_power_status(CEC_TV_ADDRESS,CEC_POWER_STATUS_ON);
-    myPowerState = CEC_POWER_STATUS_ON;
-
-    vc_cec_set_osd_name("XBMC");
-    xbmc.SendHELO("rpi-cecd", ICON_NONE);
 
     while (1) {
+        if (tvVendorId == VC_CEC_VENDOR_ID_UNKNOWN ||
+                tvVendorId == VC_CEC_VENDOR_ID_NODEVICE) {
+            uint8_t payload[1];
+            payload[0] = CEC_Opcode_GiveDeviceVendorID;
+            vc_cec_send_message(CEC_AllDevices_eTV, payload, 1, VC_FALSE);
+        } else {
+            xbmc.SendHELO("rpi-cecd", ICON_NONE);
+        }
         sleep(10);
     }
 
