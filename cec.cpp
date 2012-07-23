@@ -361,11 +361,15 @@ void VendorCommandWithID(const CECMessage& msg)
 
 void DeviceVendorID(const CECMessage& msg) {
     debug("DeviceVendorID:", msg);
+    uint32_t vendor = (msg.payload[1] << 16) + (msg.payload[2] << 8) + (msg.payload[3] << 0);
     if (msg.initiator != CEC_AllDevices_eTV) {
         return;
     }
+    // Only run initialization once
+    if (vendor == tvVendorId) {
+        return;
+    }
 
-    uint32_t vendor = (msg.payload[1] << 16) + (msg.payload[2] << 8) + (msg.payload[3] << 0);
     tvVendorId = vendor;
     printf("TV Vendor: 0x%06x\n", tvVendorId);
     if (tvVendorId == CEC_VENDOR_ID_LG ||
