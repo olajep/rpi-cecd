@@ -3,6 +3,11 @@
 This is a quick hack to make HDMI-CEC work with OpenElec/Raspbmc on Raspberry Pi.
 The goal is to make your TV remote work with XBMC
 
+##LG Menu Buttons Workaround
+For LG models lacking the back/menu buttons use the following key combos:
+* Back = Stop + Select(OK)
+* Menu = Stop + Pause
+
 ##Building:
 * Build OpenElec to get the toolchain and sysroot
 * Point $SYSROOT to the target's filesystem root
