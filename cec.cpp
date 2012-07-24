@@ -32,13 +32,13 @@ extern "C" {
 
 #include <interface/vmcs_host/vc_cecservice.h>
 #include <interface/vchiq_arm/vchiq_if.h>
+#include <interface/vmcs_host/vc_tvservice.h>
 }
 
 
 #include "config.h"
 #include "xbmcclient.h"
 #include "cecxbmckeymap.h"
-
 
 #ifndef VC_TRUE
 #define VC_TRUE 1
@@ -555,6 +555,26 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    res = vc_vchi_tv_init(vchiq_instance, &vchi_connection, 1);
+    if ( res != 0 ) {
+        printf( "TV init failed\n");
+        return -1;
+    }
+
+    TV_GET_STATE_RESP_T tvstate;
+    res = vc_tv_get_state(&tvstate);
+    if (res != 0) {
+        printf("Could not get TV state\n");
+        return -1;
+    }
+
+    printf("TV tvstate.state: 0x%x\n", tvstate.state);
+
+    // Die if SDTV cable is not unplugged
+    if (!(tvstate.state & VC_SDTV_UNPLUGGED)) {
+        printf("SDTV cable is not unplugged.\n");
+        return -1;
+    }
 
     // vc_vchi_cec_init sets vchi_connection to NULL. Thats fine
     vc_vchi_cec_init(vchiq_instance, &vchi_connection, 1);
