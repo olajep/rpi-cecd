@@ -571,8 +571,8 @@ int main(int argc, char **argv)
     printf("TV tvstate.state: 0x%x\n", tvstate.state);
 
     // Die if SDTV cable is not unplugged
-    if (!(tvstate.state & VC_SDTV_UNPLUGGED)) {
-        printf("SDTV cable is not unplugged.\n");
+    if (!(tvstate.state & (VC_HDMI_STANDBY | VC_HDMI_DVI | VC_HDMI_HDMI))) {
+        printf("HDMI cable is not attached.\n");
         return -1;
     }
 
