@@ -55,7 +55,6 @@ extern "C" {
 #endif
 
 #define CEC_VENDOR_ID_LG 0xe091
-#define CEC_VENDOR_ID_LG_QUIRK 0xffff
 
 #define SL_COMMAND_UNKNOWN_01           0x01
 #define SL_COMMAND_UNKNOWN_02           0x02
@@ -193,7 +192,7 @@ void UserControlPressed(const CECMessage& msg)
     }
 
     if (xbmcKey != NULL) {
-        if (tvVendorId == CEC_VENDOR_ID_LG || tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+        if (tvVendorId == CEC_VENDOR_ID_LG) {
             //LG Hack to support back and menu keys
             prevcode= curcode;
             curcode = keycode;
@@ -293,8 +292,7 @@ void VendorCommand_LG(const CECMessage& msg)
 
 void VendorCommand(const CECMessage& msg)
 {
-    if (myVendorId == CEC_VENDOR_ID_LG ||
-        myVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+    if (myVendorId == CEC_VENDOR_ID_LG) {
         VendorCommand_LG(msg);
     } else {
         printf("VendorCommand: unhandled vendor command operand1=0x%x "
@@ -372,8 +370,7 @@ void DeviceVendorID(const CECMessage& msg) {
 
     tvVendorId = vendor;
     printf("TV Vendor: 0x%06x\n", tvVendorId);
-    if (tvVendorId == CEC_VENDOR_ID_LG ||
-        tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+    if (tvVendorId == CEC_VENDOR_ID_LG) {
             //Do LG specific intialization
             LgCecInit();
             // only use this for temporary debugging
@@ -424,7 +421,7 @@ void vc_cec_report_physicalAddress(uint8_t dest)
     msg[0] = CEC_Opcode_ReportPhysicalAddress;
     msg[1] = (uint8_t) ((physicalAddress) >> 8 & 0xff);
     msg[2] = (uint8_t) ((physicalAddress) >> 0 & 0xff);
-    if (myVendorId == CEC_VENDOR_ID_LG || myVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+    if (myVendorId == CEC_VENDOR_ID_LG) {
         msg[3] = CEC_DeviceType_Rec;
     }
     else {
@@ -509,7 +506,7 @@ void cec_callback(void *callback_data, uint32_t param0,
 
     case CEC_Opcode_GiveDeckStatus:
     //Status code is invalid as per CEC standard but seems to be required for LG
-        if (tvVendorId == CEC_VENDOR_ID_LG || tvVendorId == CEC_VENDOR_ID_LG_QUIRK) {
+        if (tvVendorId == CEC_VENDOR_ID_LG) {
             vc_cec_send_deck_status(CEC_TV_ADDRESS,0x20);
         } else {
             vc_cec_send_deck_status(CEC_TV_ADDRESS,CEC_DECK_INFO_PLAY);
