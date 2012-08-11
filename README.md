@@ -1,7 +1,14 @@
 #RPI-CECD
 
-This is a quick hack to make HDMI-CEC work with OpenElec/Raspbmc on Raspberry Pi.
-The goal is to make your TV remote work with XBMC
+This project ~~is~~ was a quick hack to make HDMI-CEC work with OpenElec/Raspbmc/XBMC on Raspberry Pi.
+
+##Project status as of 2012-08-11
+libcec (http://libcec.pulse-eight.com/) as of 1.8.0 have added support for the RPi.
+This, in combination with OpenElec replacing rpi-cecd with libcec on the RPi platform, makes this project deprecated.
+
+I might fix issues with the current code, but I won't merge new features.
+
+It was a fun toy project while it lasted, but good riddance.
 
 ##LG Menu Buttons Workaround
 For LG models lacking the back/menu buttons use the following key combos:
@@ -24,7 +31,7 @@ make
 ```
 
 ##How to make it work on OpenElec:
-__NOTE:__ rpi-cecd is included in the OpenElec RPi nightly builds as of ~2012-06-08
+~~__NOTE:__ rpi-cecd is included in the OpenElec RPi nightly builds as of ~2012-06-08~~
 
 ##Raspbmc
 It seems that the binary also work on raspbmc, altough I have not tested it.
