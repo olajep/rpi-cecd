@@ -338,14 +338,17 @@ void SetStreamPath(const CECMessage& msg)
     debug("SetStreamPath:", msg);
 
     uint16_t requestedAddress;
-    uint16_t physicalAddress;
-
-    vc_cec_get_physical_address(&physicalAddress);
 
     requestedAddress = (msg.payload[1] << 8) + msg.payload[2];
     printf("requestedAddress: 0x%x\n", requestedAddress);
 
+    if (requestedAddress != physicalAddress) {
+        printf("Requested Address does not match Physical Address, ignoring message\n");
+        return;
+    }
+
     vc_cec_send_ActiveSource(physicalAddress, VC_FALSE);
+
     // According to the spec. this shouldn't be necessary
     vc_cec_send_MenuStatus(msg.initiator, CEC_MENU_STATE_ACTIVATED,
             VC_TRUE);
