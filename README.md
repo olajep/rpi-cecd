@@ -34,8 +34,8 @@ make
 ~~__NOTE:__ rpi-cecd is included in the OpenElec RPi nightly builds as of ~2012-06-08~~
 
 ##Raspbmc
-It seems that the binary also work on raspbmc, altough I have not tested it.
-Get the lastest from:
+It seems that the binary also work on raspbmc, although I have not tested it.
+Get the latest from:
 https://github.com/olajep/rpi-cecd/raw/binary/rpi-cecd
 
 
